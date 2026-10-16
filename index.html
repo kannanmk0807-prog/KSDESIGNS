@@ -1,0 +1,930 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#000000">
+<title>KS Designs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600&family=Hind+Madurai:wght@400;500;600&display=swap">
+<style>
+/* Layout: one phone-width column. Black and gold studio look taken from the owner's own FlutterFlow screens. Single dark theme by choice. */
+:root {
+  --bg: #0B0B0C; --card: #161617; --card2: #202022; --line: #2B2B2E; --ink: #F4F2EA; --muted: #9B9BA3;
+  --gold: #D4AF37; --on-gold: #15110A; --good: #4CC38A; --warn: #E3A94A; --bad: #FF7A6E;
+  --fd: "Outfit", "Hind Madurai", system-ui, sans-serif;
+  --fb: "Plus Jakarta Sans", "Hind Madurai", system-ui, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { height: 100%; }
+body { min-height: 100dvh; display: flex; flex-direction: column; background: var(--bg); color: var(--ink); font-family: var(--fb); font-size: 14px; line-height: 1.45; }
+button, input, textarea, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+h1, h2, h3, p { margin: 0; }
+h1, h2, h3 { font-family: var(--fd); text-wrap: balance; line-height: 1.15; }
+
+.demo { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; padding: 7px 16px; background: #000; border-bottom: 1px solid var(--line); font-size: 12px; color: var(--muted); }
+.demo:empty { display: none; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 2px; background: var(--card); }
+.seg button { border: 0; background: transparent; padding: 4px 14px; border-radius: 999px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--gold); color: var(--on-gold); }
+
+.app { flex: 1; width: 100%; max-width: 460px; margin: 0 auto; display: flex; flex-direction: column; }
+.screen { flex: 1; padding: 8px 16px 28px; display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.bar { display: flex; align-items: center; gap: 12px; padding: 16px 16px 4px; }
+.bar h1 { flex: 1; min-width: 0; font-size: 20px; font-weight: 700; }
+.bar.c h1 { text-align: center; }
+.brand { font-size: 26px; font-weight: 800; color: var(--gold); letter-spacing: -0.01em; }
+.sub { color: var(--ink); font-size: 12px; font-weight: 500; opacity: .85; }
+.ib { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); display: grid; place-items: center; flex: none; color: var(--gold); }
+.ib.ink { color: var(--ink); }
+h2.sec { font-size: 15px; font-weight: 700; text-align: center; }
+.row-h { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.row-h h2 { font-size: 15px; font-weight: 700; }
+.link { border: 0; background: transparent; color: var(--gold); font-weight: 600; font-size: 13px; padding: 0; }
+
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.lbl, .field > label { font-size: 12px; font-weight: 600; color: var(--muted); }
+.in { width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: #0E0E0F; min-width: 0; }
+textarea.in { min-height: 70px; resize: vertical; }
+select.in { appearance: auto; }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.btn { border: 0; border-radius: 12px; padding: 14px 16px; font-weight: 700; background: var(--gold); color: var(--on-gold); width: 100%; font-family: var(--fd); letter-spacing: .01em; }
+.btn.alt { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+.btn.sm { width: auto; padding: 8px 14px; font-size: 13px; border-radius: 10px; }
+.note { font-size: 12px; color: var(--muted); }
+.err { font-size: 13px; color: var(--bad); }
+.tabs2 { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--line); }
+.tabs2 button { border: 0; background: transparent; padding: 12px; font-family: var(--fd); font-weight: 700; color: var(--muted); border-bottom: 2px solid transparent; }
+.tabs2 button[aria-pressed="true"] { color: var(--ink); border-bottom-color: var(--gold); }
+.or { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 11px; font-weight: 600; letter-spacing: .06em; }
+.or::before, .or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+.logo-box { width: 84px; height: 84px; border-radius: 24px; border: 2px solid var(--gold); background: #000; display: grid; place-items: center; font-family: var(--fd); font-weight: 800; font-size: 30px; color: var(--gold); box-shadow: 0 0 28px color-mix(in srgb, var(--gold) 28%, transparent); }
+.pw { position: relative; }
+.pw .in { padding-right: 72px; }
+.pw button { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); border: 0; background: transparent; color: var(--gold); font-weight: 700; font-size: 12px; padding: 10px 12px; }
+.logo-img { width: 96px; height: 96px; object-fit: contain; border-radius: 20px; background: #000; }
+.bar .logo-img { width: 40px; height: 40px; border-radius: 10px; }
+a.btn { display: block; text-align: center; text-decoration: none; }
+.hero { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 24px 0 4px; text-align: center; }
+.hero h1 { font-size: 30px; font-weight: 800; color: var(--gold); letter-spacing: .02em; text-transform: uppercase; }
+.hero p { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+
+.car { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 0 -16px; padding: 0 16px; scrollbar-width: none; }
+.slide { position: relative; flex: 0 0 82%; height: 150px; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); scroll-snap-align: start; text-align: left; padding: 0; background: linear-gradient(135deg, #2a2412, #0f0e0a); }
+.slide img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.slide::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,.85), rgba(0,0,0,.05) 70%); }
+.slide span { position: absolute; left: 14px; right: 14px; bottom: 12px; z-index: 1; }
+.slide b { display: block; font-family: var(--fd); font-size: 17px; color: var(--gold); }
+.slide small { color: #e6e3d8; font-size: 12px; }
+.svc { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.svc button { display: flex; flex-direction: column; align-items: center; gap: 8px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px 6px; min-width: 0; font-size: 12px; font-weight: 600; text-align: center; line-height: 1.2; }
+.svc i { width: 52px; height: 52px; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--gold) 45%, var(--line)); display: grid; place-items: center; color: var(--gold); background: #0B0B0C; }
+.promo { background: var(--gold); color: var(--on-gold); border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 6px; }
+.promo h3 { font-size: 18px; }
+.promo p { font-size: 13px; opacity: .8; }
+.promo .btn { background: rgba(255,255,255,.35); color: var(--on-gold); margin-top: 6px; width: auto; align-self: flex-start; padding: 10px 16px; }
+
+.pg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.pc { background: var(--card); border: 1px solid var(--line); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; text-align: left; padding: 0; min-width: 0; }
+.pc .im { position: relative; aspect-ratio: 4 / 3; background: #101011; display: grid; place-items: center; color: var(--gold); }
+.pc .im img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.pc .tx { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.pc b { font-family: var(--fd); font-size: 14px; overflow-wrap: anywhere; }
+.pc .pr { color: var(--gold); font-weight: 700; font-family: var(--fd); font-variant-numeric: tabular-nums; }
+.pc small { color: var(--muted); font-size: 11px; }
+.badge { position: absolute; top: 8px; right: 8px; z-index: 1; padding: 3px 9px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: .04em; background: var(--gold); color: var(--on-gold); }
+.badge.free { background: var(--good); color: #06180f; }
+.hero-img { width: 100%; max-height: 240px; object-fit: cover; border-radius: 14px; }
+.ph { width: 100%; height: 150px; border-radius: 14px; background: #101011; display: grid; place-items: center; color: var(--gold); }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip { border: 1px solid var(--line); background: var(--card2); border-radius: 12px; padding: 9px 14px; font-weight: 600; font-size: 13px; }
+.chip[aria-pressed="true"] { border-color: var(--gold); color: var(--gold); background: color-mix(in srgb, var(--gold) 10%, #0B0B0C); }
+.sum { display: flex; justify-content: space-between; gap: 12px; font-variant-numeric: tabular-nums; align-items: baseline; }
+.sum > :last-child { text-align: right; min-width: 0; overflow-wrap: anywhere; }
+.sum.total { font-family: var(--fd); font-weight: 800; font-size: 18px; border-top: 1px solid var(--line); padding-top: 12px; }
+.sum.total > :last-child { color: var(--gold); }
+.upi { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: #0E0E0F; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font-weight: 600; word-break: break-all; }
+.how { background: color-mix(in srgb, var(--gold) 7%, var(--card)); border-color: color-mix(in srgb, var(--gold) 30%, var(--line)); }
+.how ol { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; }
+.how li::marker { color: var(--gold); font-weight: 700; }
+
+.pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; background: var(--card2); color: var(--muted); }
+.pill.gold { background: color-mix(in srgb, var(--gold) 16%, #0B0B0C); color: var(--gold); }
+.pill.good { background: color-mix(in srgb, var(--good) 16%, #0B0B0C); color: var(--good); }
+.pill.warn { background: color-mix(in srgb, var(--warn) 16%, #0B0B0C); color: var(--warn); }
+.tl { display: flex; flex-direction: column; }
+.tl-i { position: relative; padding: 0 0 18px 40px; display: flex; flex-direction: column; gap: 1px; color: var(--muted); }
+.tl-i::before { content: ""; position: absolute; left: 11px; top: 24px; bottom: 0; width: 2px; background: var(--line); }
+.tl-i:last-child::before { display: none; }
+.tl-i::after { content: ""; position: absolute; left: 0; top: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--card2); border: 1px solid var(--line); }
+.tl-i.on { color: var(--ink); }
+.tl-i.on::before { background: var(--gold); }
+.tl-i.on::after { background: var(--gold); border-color: var(--gold); box-shadow: inset 0 0 0 6px var(--gold); }
+.tl-i.on::after { background: var(--gold) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2315110A' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 12 4 4 8-9'/%3E%3C/svg%3E") center / 14px no-repeat; box-shadow: none; }
+.tl-i b { font-family: var(--fd); font-size: 15px; }
+.tl-i.cur b { color: var(--gold); }
+.tl-i span { font-size: 12px; }
+.tl-i em { font-style: normal; font-size: 11px; color: var(--gold); font-weight: 600; }
+.stars { display: flex; gap: 4px; }
+.stars button { border: 0; background: transparent; font-size: 26px; line-height: 1; color: var(--line); padding: 2px; }
+.stars button.on { color: var(--gold); }
+
+.stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.stat { background: var(--card); border: 1px solid color-mix(in srgb, var(--gold) 22%, var(--line)); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 4px; }
+.stat svg { color: var(--gold); }
+.stat b { font-family: var(--fd); font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 12px; color: var(--muted); }
+.li { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; border: 1px solid var(--line); background: var(--card); border-radius: 14px; padding: 12px 14px; min-width: 0; }
+.li > div { flex: 1; min-width: 0; }
+.li b { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.li small { color: var(--muted); font-size: 12px; }
+.list { display: flex; flex-direction: column; gap: 10px; }
+.thumb { width: 48px; height: 48px; border-radius: 10px; object-fit: cover; background: #101011; color: var(--gold); display: grid; place-items: center; flex: none; font-size: 11px; }
+.thumb.big { width: 100%; height: 100px; }
+.price { font-family: var(--fd); font-weight: 700; color: var(--gold); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.av { width: 40px; height: 40px; border-radius: 50%; background: var(--gold); color: var(--on-gold); display: grid; place-items: center; font-family: var(--fd); font-weight: 800; flex: none; }
+.chart { width: 100%; height: auto; display: block; }
+.chart text { fill: var(--muted); font-size: 10px; font-family: var(--fb); }
+.chart .v { fill: var(--gold); font-weight: 700; }
+.nt { display: flex; gap: 12px; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; }
+.nt i { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; background: color-mix(in srgb, var(--gold) 12%, #0B0B0C); color: var(--gold); flex: none; }
+.nt div { flex: 1; min-width: 0; }
+.nt b { display: block; font-weight: 600; font-size: 13px; overflow-wrap: anywhere; }
+.nt small { color: var(--muted); font-size: 11px; }
+.notif { border: 1px dashed var(--muted); border-radius: 14px; padding: 12px 14px; background: var(--card); }
+.notif small { display: block; color: var(--muted); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 4px; }
+.prof { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 16px 0 4px; }
+.prof .av { width: 84px; height: 84px; font-size: 28px; border: 2px solid var(--gold); background: #000; color: var(--gold); }
+.prof .ps { display: grid; grid-template-columns: repeat(3, 1fr); width: 100%; margin-top: 10px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px 0; text-align: center; }
+.prof .ps b { display: block; font-family: var(--fd); font-size: 20px; color: var(--gold); }
+.prof .ps span { font-size: 11px; color: var(--muted); }
+
+.nav { position: sticky; bottom: 0; margin-top: auto; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: #000; border-top: 1px solid var(--line); padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px)); }
+.nav button { border: 0; background: transparent; padding: 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 11px; color: var(--muted); font-weight: 600; }
+.nav button[aria-current="true"] { color: var(--gold); }
+.toast { position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); max-width: min(420px, calc(100% - 32px)); background: var(--gold); color: var(--on-gold); padding: 10px 16px; border-radius: 12px; font-weight: 600; font-size: 13px; z-index: 30; }
+@media (prefers-reduced-motion: no-preference) { .btn, .pc, .svc button, .li { transition: transform .12s; } .btn:active, .pc:active, .svc button:active, .li:active { transform: scale(.98); } }
+.logo-tap { border: 0; background: transparent; padding: 0; cursor: default; border-radius: 24px; -webkit-tap-highlight-color: transparent; }
+.gbtn { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.gbtn b { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: #fff; color: #4285F4; font-family: Arial, sans-serif; font-size: 14px; }
+</style>
+</head><body>
+<div class="demo" id="demo"></div>
+<div class="app" id="app"></div>
+<div class="toast" id="toast" hidden></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, query, where, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyAph9DCxQrY17NCpSlka8NIlhqwrRD5KU0",
+  authDomain: "ks-designs-app.firebaseapp.com",
+  projectId: "ks-designs-app",
+  storageBucket: "ks-designs-app.firebasestorage.app",
+  messagingSenderId: "846176106696",
+  appId: "1:846176106696:web:01daa2ee21a5773bc34dfd"
+});
+const auth = getAuth(app), db = getFirestore(app);
+const ref = path => doc(db, ...path.split('/'));
+const arr = s => s.docs.map(d => ({ id: d.id, ...d.data() }));
+window.KSFB = {
+  onAuth: cb => onAuthStateChanged(auth, cb),
+  google: async () => {
+    const p = new GoogleAuthProvider();
+    try { return await signInWithPopup(auth, p); }
+    catch (e) {
+      if (['auth/popup-blocked', 'auth/operation-not-supported-in-this-environment'].includes(e.code)) return signInWithRedirect(auth, p);
+      throw e;
+    }
+  },
+  login: (email, pw) => signInWithEmailAndPassword(auth, email, pw),
+  logout: () => signOut(auth),
+  watchCol: (name, cb, err, w) => onSnapshot(w ? query(collection(db, name), where(w[0], w[1], w[2])) : collection(db, name), s => cb(arr(s)), err),
+  watchDoc: (path, cb, err) => onSnapshot(ref(path), s => cb(s.exists() ? s.data() : null), err),
+  get: async path => { const s = await getDoc(ref(path)); return s.exists() ? s.data() : null; },
+  set: (path, data, merge) => setDoc(ref(path), data, merge ? { merge: true } : {}),
+  update: (path, data) => updateDoc(ref(path), data),
+  del: path => deleteDoc(ref(path)),
+  batch: ops => { const b = writeBatch(db); ops.forEach(([t, path, data]) => (t === 'del' ? b.delete(ref(path)) : b.set(ref(path), data))); return b.commit(); }
+};
+window.dispatchEvent(new Event('ksfb'));
+</script>
+
+<script>
+(() => {
+'use strict';
+const IC = {
+  layers: '<path d="M12 3 3 8l9 5 9-5-9-5Z"/><path d="m3 13 9 5 9-5"/>',
+  printer: '<path d="M7 9V3h10v6"/><rect x="4" y="9" width="16" height="8" rx="1.5"/><path d="M7 14h10v7H7z"/>',
+  banner: '<rect x="3" y="6" width="18" height="12" rx="1"/><circle cx="5.5" cy="8.5" r=".6"/><circle cx="18.5" cy="8.5" r=".6"/><circle cx="5.5" cy="15.5" r=".6"/><circle cx="18.5" cy="15.5" r=".6"/>',
+  card: '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M7 10h5M7 14h8"/>',
+  frame: '<rect x="3" y="4" width="18" height="16" rx="1"/><path d="m6 17 4-5 3 3 2-2 3 4"/><circle cx="9" cy="9" r="1.2"/>',
+  logo: '<circle cx="12" cy="12" r="8"/><path d="M12 7v10M7 12h10"/>',
+  social: '<rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 18h2"/>',
+  video: '<rect x="3" y="6" width="18" height="12" rx="2"/><path d="m10 9.5 5 2.5-5 2.5Z"/>',
+  box: '<path d="M3 8l9-5 9 5v8l-9 5-9-5V8Z"/><path d="m3 8 9 5 9-5M12 13v8"/>',
+  folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/>',
+  star: '<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
+  tag: '<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1"/>',
+  home: '<path d="m4 11 8-7 8 7v9H4z"/><path d="M10 20v-6h4v6"/>',
+  list: '<path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 20a6.5 6.5 0 0 0-2.5-5"/>',
+  back: '<path d="m15 5-7 7 7 7"/>',
+  cog: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
+  bell: '<path d="M6 17v-6a6 6 0 0 1 12 0v6l1.5 2h-15z"/><path d="M10 21h4"/>',
+  search: '<circle cx="11" cy="11" r="6"/><path d="m20 20-4-4"/>',
+  upload: '<path d="M12 16V4m0 0L8 8m4-4 4 4"/><path d="M4 16v4h16v-4"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  camera: '<path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
+  check: '<path d="m5 12 5 5 9-10"/>',
+  grid: '<rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/>',
+  wallet: '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M16 14.5h2"/>',
+  bag: '<path d="M5 8h14l-1 12H6z"/><path d="M9 8a3 3 0 0 1 6 0"/>'
+};
+const svg = (n, s = 22) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n] || IC.star}</svg>`;
+const rupee = n => '₹' + Math.round(n || 0).toLocaleString('en-IN');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmt = ts => new Date(ts).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' });
+const ago = ts => { const m = Math.round((Date.now() - ts) / 60000); return m < 1 ? 'just now' : m < 60 ? m + ' min ago' : m < 1440 ? Math.round(m / 60) + ' hr ago' : Math.round(m / 1440) + ' days ago'; };
+const UNIT = { sqft: 'per sq ft', pc: 'each', set: 'per 100', file: 'per file', job: 'per design' };
+const ICONS = ['layers', 'printer', 'banner', 'card', 'frame', 'logo', 'social', 'video', 'box', 'folder', 'star', 'tag'];
+const FORMS = { flex: 'Flex style (main text, sub text, logo)', card: 'Visiting card (business details)', plain: 'Simple (notes only)' };
+const STEPS = [['Order Placed', 'Your order has been received'], ['Design Confirmation', 'Our designer is preparing the preview'], ['Printing', 'High-quality printing in progress'], ['Quality Check', 'Checking colour accuracy and finish'], ['Out for Delivery', 'Handed over to the delivery partner'], ['Delivered', 'Order received']];
+const BADGES = ['', 'PREMIUM', 'FREE', 'NEW'];
+const TXT = {
+  loginTitle: ['Login title', 'Welcome Back'], loginSub: ['Login subtitle', 'Sign in to access your orders'],
+  featured: ['Home: banners heading', 'Featured Collections'], services: ['Home: services heading', 'Our Services'],
+  promoTitle: ['Home: promo card title', 'New PSD Templates'], promoText: ['Home: promo card text ({n} = number of templates)', 'Download {n}+ premium layouts for your next project.'],
+  promoBtn: ['Home: promo button', 'Browse Marketplace'], payTitle: ['Checkout: payment heading', 'How to pay via UPI'],
+  thanks: ['Order placed: thank-you line', 'Thank you / நன்றி']
+};
+
+/* [id, English, Tamil, icon, form kind, items [name, unit, price, badge]] */
+const RAW = [
+  ['psd', 'PSD & Templates', 'PSD & டெம்ப்ளேட்ஸ்', 'layers', 'plain', [['Poster PSD', 'file', 150, 'PREMIUM'], ['Social Media Post PSD', 'file', 80, ''], ['YouTube Thumbnail PSD', 'file', 100, ''], ['Menu Card PSD', 'file', 200, 'PREMIUM'], ['Wedding Invitation PSD', 'file', 250, 'PREMIUM'], ['Instagram Story Templates', 'file', 0, 'FREE']]],
+  ['print', 'Printing Services', 'பிரிண்டிங் சர்வீஸ்', 'printer', 'plain', [['Wedding Invitation Card', 'pc', 12, ''], ['Letterhead', 'set', 450, ''], ['Envelope', 'set', 350, ''], ['Pamphlet / Leaflet', 'set', 600, ''], ['Book Cover Design & Print', 'job', 1200, ''], ['Product Label', 'set', 300, ''], ['Sticker Printing', 'sqft', 40, ''], ['Gift Box Design', 'job', 800, ''], ['Packaging Design', 'job', 1500, '']]],
+  ['flex', 'Flex Orders', 'ப்ளெக்ஸ் ஆர்டர்ஸ்', 'banner', 'flex', [['Flex Banner', 'sqft', 14, ''], ['Wedding Board (Flex)', 'sqft', 18, ''], ['Vinyl Sticker', 'sqft', 45, ''], ['Sunpack Sheet Board', 'sqft', 85, ''], ['Shop Name Board', 'sqft', 22, '']]],
+  ['cards', 'Visiting Cards', 'விசிட்டிங் கார்டு', 'card', 'card', [['Standard Visiting Card', 'set', 250, ''], ['Premium Laminated Card', 'set', 450, 'PREMIUM'], ['Double-side Matt Card', 'set', 380, '']]],
+  ['frames', 'Photo Frames', 'போட்டோ ஃப்ரேம்ஸ்', 'frame', 'plain', [['Family Frame', 'pc', 650, ''], ['Wedding Frame', 'pc', 850, ''], ['Birthday Frame', 'pc', 550, ''], ['Baby Photo Frame', 'pc', 550, ''], ['God Photo Frame', 'pc', 600, ''], ['Memorial Frame', 'pc', 700, ''], ['Collage Frame', 'pc', 950, ''], ['Photo Restoration', 'job', 300, '']]],
+  ['logo', 'Logo & Branding', 'லோகோ & பிராண்டிங்', 'logo', 'plain', [['Logo Design', 'job', 1500, ''], ['Brand Identity Design', 'job', 5000, ''], ['Logo + Visiting Card Package', 'job', 2200, ''], ['Brochure Design', 'job', 1500, ''], ['Flyer Design', 'job', 500, ''], ['Magazine / Catalog Design', 'job', 3500, ''], ['Company Profile Design', 'job', 4500, ''], ['Advertisement Creative', 'job', 600, '']]],
+  ['social', 'Social Media Designs', 'சோஷியல் மீடியா டிசைன்', 'social', 'plain', [['Instagram Post Pack (10)', 'job', 999, ''], ['Festival Poster', 'job', 150, ''], ['Reel Cover', 'job', 120, ''], ['WhatsApp Status Poster', 'job', 80, ''], ['Highlight Cover Set', 'job', 250, ''], ['Facebook Ads Creative', 'job', 300, ''], ['YouTube Channel Branding', 'job', 1500, '']]],
+  ['video', 'Video Editing', 'வீடியோ எடிட்டிங்', 'video', 'plain', [['Reel Editing', 'job', 400, ''], ['YouTube Video Editing', 'job', 1200, ''], ['Short Video Ad', 'job', 1500, ''], ['Logo Animation', 'job', 800, ''], ['Intro / Outro Animation', 'job', 600, ''], ['Motion Graphics', 'job', 1800, ''], ['Product Promo Video', 'job', 2500, '']]],
+  ['biz', 'Business Packages', 'பிசினஸ் பேக்கேஜ்', 'box', 'plain', [['Shop Board Design', 'job', 1200, ''], ['Flex + Poster Package', 'job', 1800, ''], ['Complete Brand Kit', 'job', 8000, 'PREMIUM'], ['Restaurant Branding Package', 'job', 6500, ''], ['Real Estate Marketing Package', 'job', 7500, ''], ['Social Media Monthly Package', 'job', 3500, '']]],
+  ['res', 'Designer Resources', 'டிசைனர் ரிசோர்சஸ்', 'folder', 'plain', [['PSD Files', 'file', 99, ''], ['Mockups', 'file', 149, ''], ['Fonts', 'file', 199, ''], ['Icons', 'file', 99, ''], ['Backgrounds', 'file', 99, ''], ['Text Effects', 'file', 99, ''], ['Photoshop Actions', 'file', 149, ''], ['Lightroom Presets', 'file', 149, ''], ['Canva Templates', 'file', 149, ''], ['AI Design Prompts', 'file', 199, '']]]
+];
+const seedCats = () => {
+  const cats = RAW.map(([id, en, ta, ic, form, items]) => ({ id, en, ta, ic, form, items: items.map((x, i) => ({ id: id + i, n: x[0], u: x[1], p: x[2], badge: x[3], img: '', opts: [] })) }));
+  cats.find(c => c.id === 'frames').items.forEach(i => { if (i.u === 'pc') i.opts = [{ l: '8 × 10 in', p: i.p - 300 }, { l: '12 × 18 in', p: i.p }, { l: '16 × 24 in', p: i.p + 450 }]; });
+  const fl = cats.find(c => c.id === 'flex').items[0]; fl.opts = [];
+  return cats;
+};
+const seedBanners = () => [
+  { id: 'b1', t: 'Grand Opening Flex', s: 'High-quality outdoor printing', img: '', cat: 'flex' },
+  { id: 'b2', t: 'Wedding Frames', s: 'Photo frames in every size', img: '', cat: 'frames' },
+  { id: 'b3', t: 'Visiting Cards', s: 'Matte, gloss and gold foil', img: '', cat: 'cards' }
+];
+/* ---------- shop state (live from Firestore) ---------- */
+/* Keep this list in sync with firestore.rules. These accounts open the admin side. */
+const ADMINS = ['kannanmk0807@gmail.com', '9994810807@ksdesigns.app'];
+const DEFAULT_CFG = { store: 'KS Designs', tag: 'Premium Creative Studio', upi: 'kannanmk0807-4@okaxis', payee: 'KS Designs', notify: '9994810807', custFee: 0, ship: 0, logo: '', gold: '#D4AF37', text: {}, stepTx: [], payUpi: true, payCod: true };
+const S = {
+  mode: 'customer', user: null, screen: 'main', tab: 'home', auth: 'login', authErr: '', busy: false, ready: false, dataReady: false, dbErr: '',
+  cat: null, item: null, form: {}, payErr: '', addrErr: '', contactErr: '', addrBook: {}, last: null, draft: {}, taps: [], ownerTry: false,
+  admin: { tab: 'dash', filter: 'all', open: null, edit: null, cedit: null },
+  cfg: Object.assign({}, DEFAULT_CFG), cfgExists: false, tg: { tgToken: '', tgChat: '' },
+  catsRaw: [], itemsRaw: [], cats: [], banners: [], orders: [], profile: null, seen: null
+};
+const tx = k => (S.cfg.text && S.cfg.text[k]) ? S.cfg.text[k] : TXT[k][1];
+const stepsNow = () => STEPS.map((s, i) => { const o = (S.cfg.stepTx && S.cfg.stepTx[i]) || {}; return [o.n || s[0], o.d || s[1]]; });
+function applyTheme() {
+  const g = /^#[0-9a-f]{6}$/i.test(S.cfg.gold) ? S.cfg.gold : '#D4AF37', l = (0.299 * parseInt(g.slice(1, 3), 16) + 0.587 * parseInt(g.slice(3, 5), 16) + 0.114 * parseInt(g.slice(5, 7), 16)) / 255, st = document.documentElement.style;
+  st.setProperty('--gold', g); st.setProperty('--on-gold', l > 0.55 ? '#15110A' : '#FFFFFF');
+}
+let toastTimer;
+const $app = document.getElementById('app'), $demo = document.getElementById('demo'), $toast = document.getElementById('toast');
+function toast(m) { $toast.textContent = m; $toast.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { $toast.hidden = true; }, 2800); }
+const newId = () => 'KSD-' + Date.now().toString(36).slice(-6).toUpperCase() + Math.floor(Math.random() * 36).toString(36).toUpperCase();
+const fail = e => { console.error(e); toast(e && e.code === 'permission-denied' ? 'Not allowed. Log in as the owner to change this.' : 'Could not save. Check your internet and try again.'); };
+const KS = () => window.KSFB;
+
+/* debounced saves, so typing in Settings does not write on every key */
+let cfgTimer = null, tgTimer = null; const bnTimers = {};
+function saveCfg(now) {
+  clearTimeout(cfgTimer);
+  const run = () => {
+    cfgTimer = null;
+    const d = {}; Object.keys(DEFAULT_CFG).forEach(k => { d[k] = S.cfg[k] === undefined ? DEFAULT_CFG[k] : S.cfg[k]; });
+    d.stepTx = Array.from({ length: STEPS.length }, (_, i) => { const o = (S.cfg.stepTx || [])[i] || {}; return { n: o.n || '', d: o.d || '' }; });
+    d.text = Object.assign({}, S.cfg.text || {});
+    d.custFee = +d.custFee || 0; d.ship = +d.ship || 0;
+    KS().set('cfg/main', d).catch(fail);
+  };
+  if (now) run(); else cfgTimer = setTimeout(run, 900);
+}
+function saveTg(now) {
+  clearTimeout(tgTimer);
+  const run = () => { tgTimer = null; KS().set('cfg/notify', { tgToken: String(S.tg.tgToken || '').trim(), tgChat: String(S.tg.tgChat || '').trim() }).catch(fail); };
+  if (now) run(); else tgTimer = setTimeout(run, 900);
+}
+function saveBanner(b, now) {
+  clearTimeout(bnTimers[b.id]);
+  const run = () => { delete bnTimers[b.id]; KS().set('banners/' + b.id, { t: b.t || '', s: b.s || '', img: b.img || '', cat: b.cat || '', o: b.o || 0 }).catch(fail); };
+  if (now) run(); else bnTimers[b.id] = setTimeout(run, 900);
+}
+function rebuild() {
+  const by = {};
+  S.itemsRaw.slice().sort((a, b) => (a.o || 0) - (b.o || 0)).forEach(i => { (by[i.cat] = by[i.cat] || []).push({ id: i.id, n: i.n || '', u: i.u || 'pc', p: +i.p || 0, badge: i.badge || '', img: i.img || '', opts: i.opts || [] }); });
+  S.cats = S.catsRaw.slice().sort((a, b) => (a.o || 0) - (b.o || 0)).map(c => ({ id: c.id, en: c.en || '', ta: c.ta || '', ic: c.ic || 'star', form: c.form || 'plain', items: by[c.id] || [] }));
+}
+const notesNow = () => {
+  const out = [];
+  S.orders.slice(0, 8).forEach(o => { out.push({ ic: 'bag', t: `New order ${o.id}: ${o.item} (${rupee(o.total)})${o.method === 'cod' ? ' · cash on delivery' : ''}`, ts: o.ts }); if (o.fb) out.push({ ic: 'star', t: `Feedback on ${o.id}: ${o.fb.r} stars`, ts: o.ts }); });
+  return out.slice(0, 6);
+};
+const mkSeedOps = () => {
+  const ops = [];
+  seedCats().forEach((c, ci) => { ops.push(['set', 'cats/' + c.id, { en: c.en, ta: c.ta, ic: c.ic, form: c.form, o: ci }]); c.items.forEach((i, ii) => ops.push(['set', 'items/' + i.id, { cat: c.id, n: i.n, u: i.u, p: i.p, badge: i.badge || '', img: '', opts: i.opts || [], o: ii }])); });
+  seedBanners().forEach((b, bi) => ops.push(['set', 'banners/' + b.id, { t: b.t, s: b.s, img: '', cat: b.cat, o: bi }]));
+  if (!S.cfgExists) ops.push(['set', 'cfg/main', Object.assign({}, DEFAULT_CFG, { stepTx: STEPS.map(() => ({ n: '', d: '' })) })]);
+  return ops;
+};
+function sendTG(text) {
+  const t = String(S.tg.tgToken || '').trim(), c = String(S.tg.tgChat || '').trim();
+  if (!t || !c) return false;
+  try { fetch(`https://api.telegram.org/bot${t}/sendMessage?chat_id=${encodeURIComponent(c)}&text=${encodeURIComponent(text)}`, { mode: 'no-cors' }).catch(() => {}); } catch (e) { /* ignore */ }
+  return true;
+}
+
+const catOf = id => S.cats.find(c => c.id === id);
+const findItem = id => { for (const c of S.cats) { const i = c.items.find(x => x.id === id); if (i) return { ...i, cat: c }; } return null; };
+const allItems = () => S.cats.flatMap(c => c.items.map(i => ({ ...i, cat: c })));
+const mine = () => S.orders.filter(o => o.uid === S.user?.id);
+const optOf = (it, f) => (it.opts || [])[f.opt || 0] || (it.opts || [])[0];
+const hasOpts = it => it.opts && it.opts.length;
+const sub = (it, f) => it.u === 'sqft' ? (f.w || 0) * (f.h || 0) * (f.qty || 0) * it.p : (f.qty || 0) * (hasOpts(it) ? optOf(it, f).p : it.p);
+const physical = it => ['sqft', 'pc', 'set'].includes(it.u);
+const fees = it => ({ fee: it.u === 'file' ? 0 : (+S.cfg.custFee || 0), ship: physical(it) ? (+S.cfg.ship || 0) : 0 });
+const totalOf = (it, f) => { const x = fees(it); return sub(it, f) + x.fee + x.ship; };
+const detailOf = (it, f) => hasOpts(it) ? `${optOf(it, f).l} × ${f.qty}` : it.u === 'sqft' ? `${f.w} × ${f.h} ft × ${f.qty}` : it.u === 'set' ? `${f.qty} × 100` : `${f.qty} ${f.qty > 1 ? 'units' : 'unit'}`;
+const priceLabel = it => hasOpts(it) ? 'from ' + rupee(Math.min(...it.opts.map(o => o.p))) : it.p === 0 ? 'Free' : rupee(it.p);
+const newCount = () => S.orders.filter(o => !o.paid).length;
+const FIELDS = {
+  flex: [['t1', 'Main Text', 'Shop name or message'], ['t2', 'Sub Text / Phone', 'e.g. Open 9am - 10pm']],
+  card: [['t1', 'Company Name', 'e.g. KS Designs Ltd.'], ['t2', 'Your Designation', 'e.g. Creative Director'], ['t3', 'Contact Number', '+91 00000 00000'], ['t4', 'Email Address', 'hello@company.com'], ['t5', 'Website', 'www.example.com']],
+  plain: []
+};
+
+/* ---------- shared pieces ---------- */
+const thumb = i => i.img ? `<img class="thumb" src="${i.img}" alt="">` : `<span class="thumb">${svg('frame', 20)}</span>`;
+const bar = (t, back) => `<header class="bar c">${back ? `<button class="ib ink" data-act="back" aria-label="Back">${svg('back', 20)}</button>` : '<span style="width:40px"></span>'}<h1>${t}</h1><span style="width:40px"></span></header>`;
+const timeline = o => `<div class="tl">${stepsNow().map((s, i) => `<div class="tl-i ${i <= o.status ? 'on' : ''} ${i === o.status ? 'cur' : ''}"><b>${s[0]}</b><span>${s[1]}</span>${o.hist[i] ? `<em>${fmt(o.hist[i])}</em>` : ''}</div>`).join('')}</div>`;
+const starRow = (n, id, live) => `<div class="stars" ${live ? 'role="group" aria-label="Rating"' : 'style="pointer-events:none"'}>${[1, 2, 3, 4, 5].map(i => `<button class="${i <= n ? 'on' : ''}" ${live ? `data-act="rate" data-id="${id}" data-v="${i}" aria-label="${i} star"` : 'tabindex="-1"'}>★</button>`).join('')}</div>`;
+const statusPill = o => o.status === 5 ? '<span class="pill good">Delivered</span>' : !o.paid && o.method === 'cod' ? `<span class="pill gold">COD · ${stepsNow()[o.status][0]}</span>` : !o.paid ? '<span class="pill warn">Payment pending</span>' : `<span class="pill gold">${stepsNow()[o.status][0]}</span>`;
+const demoBar = () => '';
+
+const methods = it => [S.cfg.payUpi !== false && 'upi', S.cfg.payCod !== false && it.u !== 'file' && 'cod'].filter(Boolean);
+const payOf = it => { const m = methods(it); return m.includes(S.form.pay) ? S.form.pay : (m[0] || 'upi'); };
+const addrLine = a => `${a.name}, ${a.phone}, ${a.line}, ${a.city} - ${a.pin}${a.lm ? ' (near ' + a.lm + ')' : ''}`;
+const waText = o => [`*New order ${o.id}* (${S.cfg.store})`, `Customer: ${o.name} (${o.phone})`, `Item: ${o.item}`, `Size / details: ${o.detail}`, `Quantity: ${o.qty || 1}`, ...(o.details || []).map(d => `${d.l}: ${d.v}`), o.note ? `Notes: ${o.note}` : '', o.file ? `Logo / photo: ${o.file} (customer will send it on WhatsApp)` : '', `Total: ${rupee(o.total)}`, `Payment: ${o.method === 'cod' ? 'Cash on delivery' : o.method === 'free' ? 'Free' : 'UPI ref ' + o.ref}`, o.dm === 'delivery' && o.addr ? `Deliver to: ${addrLine(o.addr)}` : o.dm === 'pickup' ? 'Pickup from the shop' : ''].filter(Boolean).join('\n');
+const waUrl = o => { const n = String(S.cfg.notify || '').replace(/\D/g, '').slice(-10); return /^\d{10}$/.test(n) ? `https://wa.me/91${n}?text=${encodeURIComponent(waText(o))}` : ''; };
+function deliveryCard(f) {
+  const a = f.addr || {}, dm = f.dm || 'delivery';
+  const fl = (k, l, ph, extra) => `<div class="field"><label for="ad-${k}">${l}</label><input class="in" id="ad-${k}" data-ad="${k}" ${extra || ''} value="${esc(a[k] || '')}" placeholder="${ph}"></div>`;
+  return `<section class="card"><h2 style="font-size:15px">Delivery</h2>
+  <div class="chips"><button class="chip" data-act="dm" data-v="delivery" aria-pressed="${dm === 'delivery'}">Deliver to my address</button><button class="chip" data-act="dm" data-v="pickup" aria-pressed="${dm === 'pickup'}">I will pick up from the shop</button></div>
+  ${dm === 'delivery' ? `${fl('name', 'Receiver name', 'Name')}${fl('phone', 'Phone number', '10-digit number', 'inputmode="numeric" maxlength="10"')}${fl('line', 'House / street', 'Door no, street, area')}<div class="two">${fl('city', 'Town / city', 'Town or city')}${fl('pin', 'Pincode', '6 digits', 'inputmode="numeric" maxlength="6"')}</div>${fl('lm', 'Landmark (optional)', 'Near ...')}` : '<p class="note">Collect your order from the shop when it is ready.</p>'}
+  ${S.addrErr ? `<p class="err">${esc(S.addrErr)}</p>` : ''}</section>`;
+}
+const upiQuery = t => `pa=${encodeURIComponent(S.cfg.upi)}&pn=${encodeURIComponent(S.cfg.payee || S.cfg.store)}&am=${t.toFixed(2)}&cu=INR&tn=${encodeURIComponent(S.form.oid || 'KS Designs order')}`;
+
+/* ---------- customer ---------- */
+const pwBox = (id, ac, ph) => `<div class="pw"><input class="in" id="${id}" type="password" autocomplete="${ac}" ${ph ? `placeholder="${ph}"` : ''}><button type="button" data-act="pwtoggle" data-for="${id}" aria-label="Show password">Show</button></div>`;
+const logoHtml = () => S.cfg.logo ? `<img class="logo-img" src="${S.cfg.logo}" alt="">` : '<div class="logo-box">KS</div>';
+const loadingView = () => `<main class="screen"><div class="hero">${logoHtml()}<h1>${esc(S.cfg.store)}</h1><p>${S.dbErr === 'net' ? 'Could not connect. Check your internet and reopen the app.' : 'Loading...'}</p></div></main>`;
+function login() {
+  const hero = `<div class="hero"><button class="logo-tap" data-act="logotap" aria-label="${esc(S.cfg.store)} logo">${logoHtml()}</button><h1>${esc(S.cfg.store)}</h1><p>${esc(S.cfg.tag)}</p></div>`;
+  const err = S.authErr ? `<p class="err">${esc(S.authErr)}</p>` : '';
+  if (S.auth === 'owner') return `<main class="screen">${hero}
+  <section class="card"><h2 style="font-size:20px">Owner login</h2><p class="note">Only the shop owner can open the admin side.</p>
+    <div class="field"><label for="em">Email or phone number</label><input class="in" id="em" autocomplete="username" placeholder="Your admin email or phone"></div>
+    <div class="field"><label for="pw">Password</label>${pwBox('pw', 'current-password')}</div>
+    ${err}<button class="btn" data-act="owner">Open admin</button>
+    <button class="btn alt" data-act="auth" data-v="login">Back</button></section></main>`;
+  return `<main class="screen">${hero}
+  <section class="card"><h2 style="font-size:20px">${esc(tx('loginTitle'))}</h2><p class="note">${esc(tx('loginSub'))}</p>
+    <button class="btn gbtn" data-act="google"><b>G</b>Continue with Google</button>
+    ${err}
+    ${S.dbErr === 'permission' ? '<p class="err">The shop is not ready yet. Please try again in a little while.</p>' : ''}
+    <p class="note">You will add your mobile number when you place your first order.</p></section></main>`;
+}
+const contactCard = f => { const c = f.contact || {}; return `<section class="card"><h2 style="font-size:15px">Your contact</h2>
+  <div class="field"><label for="ct-name">Your name</label><input class="in" id="ct-name" data-ct="name" autocomplete="name" value="${esc(c.name || '')}" placeholder="Name"></div>
+  <div class="field"><label for="ct-phone">Mobile number</label><input class="in" id="ct-phone" data-ct="phone" inputmode="numeric" maxlength="10" autocomplete="tel-national" value="${esc(c.phone || '')}" placeholder="10-digit number"></div>
+  <p class="note">The shop contacts you on this number about your order.</p>${S.contactErr ? `<p class="err">${esc(S.contactErr)}</p>` : ''}</section>`; };
+const seedCard = () => (!S.cats.length && S.dataReady) ? `<section class="card how"><h2 style="font-size:15px;color:var(--gold)">Your shop is empty</h2><p class="note">Load the starter catalogue: 10 categories with sample products and prices. You can edit or delete anything afterwards in Products.</p><button class="btn" data-act="seed">Load starter catalogue</button></section>` : '';
+
+function home() {
+  const n = S.cats.find(c => c.id === 'psd');
+  return `<header class="bar">${S.cfg.logo ? `<img class="logo-img" src="${S.cfg.logo}" alt="">` : ''}<div style="flex:1;min-width:0"><div class="brand">${esc(S.cfg.store)}</div><div class="sub">${esc(S.cfg.tag)}</div></div><button class="ib" data-act="tab" data-v="orders" aria-label="My orders">${svg('bell', 20)}</button></header>
+  <main class="screen">
+  <div class="field"><label class="lbl" for="q" style="position:absolute;left:-9999px">Search</label><input class="in" id="q" type="search" placeholder="Search for designs, PSDs..."></div>
+  <div id="sres" class="list" hidden></div>
+  <div id="hm" style="display:flex;flex-direction:column;gap:18px">
+    ${S.banners.length ? `<section><div class="row-h" style="margin-bottom:10px"><h2>${esc(tx('featured'))}</h2></div><div class="car">${S.banners.map(b => `<button class="slide" data-act="banner" data-id="${b.id}">${b.img ? `<img src="${b.img}" alt="">` : ''}<span><b>${esc(b.t)}</b><small>${esc(b.s)}</small></span></button>`).join('')}</div></section>` : ''}
+    <section><h2 class="sec" style="margin-bottom:12px">${esc(tx('services'))}</h2>${S.cats.length ? `<div class="svc">${S.cats.map(c => `<button data-act="cat" data-id="${c.id}"><i>${svg(c.ic, 24)}</i>${esc(c.en)}</button>`).join('')}</div>` : `<p class="note" style="text-align:center">${S.dataReady ? 'The shop is opening soon.' : 'Loading...'}</p>`}</section>
+    ${n ? `<div class="promo"><h3>${esc(tx('promoTitle'))}</h3><p>${esc(tx('promoText').replace('{n}', n.items.length))}</p><button class="btn" data-act="cat" data-id="psd">${esc(tx('promoBtn'))}</button></div>` : ''}
+  </div></main>`;
+}
+function prodCard(i) {
+  return `<button class="pc" data-act="item" data-id="${i.id}"><div class="im">${i.img ? `<img src="${i.img}" alt="">` : svg('frame', 30)}${i.badge ? `<span class="badge ${i.badge === 'FREE' ? 'free' : ''}">${esc(i.badge)}</span>` : ''}</div><div class="tx"><b>${esc(i.n)}</b><span class="pr">${priceLabel(i)}</span><small>${hasOpts(i) ? i.opts.length + ' sizes' : UNIT[i.u]}</small></div></button>`;
+}
+function category() {
+  const c = catOf(S.cat);
+  return `${bar(esc(c.en), true)}<main class="screen"><p class="note" style="text-align:center">${esc(c.ta)}</p>${c.items.length ? `<div class="pg">${c.items.map(prodCard).join('')}</div>` : '<p class="note" style="text-align:center">No products here yet.</p>'}</main>`;
+}
+function itemScreen() {
+  const it = findItem(S.item), f = S.form, kind = it.cat.form, digital = it.u === 'file';
+  return `${bar(esc(it.n), true)}<main class="screen">
+  ${it.img ? `<img class="hero-img" src="${it.img}" alt="${esc(it.n)}">` : `<div class="ph">${svg(it.cat.ic, 40)}</div>`}
+  <div class="row-h"><h2 style="font-size:20px">${esc(it.n)}</h2><span class="price" style="font-size:18px">${priceLabel(it)}</span></div>
+  <section class="card">
+    ${FIELDS[kind].length ? '<h2 style="font-size:15px;color:var(--gold)">Customize details</h2>' : ''}
+    ${FIELDS[kind].map(([k, l, p]) => `<div class="field"><label for="f-${k}">${l}</label><input class="in" id="f-${k}" data-bind="${k}" value="${esc(f[k] || '')}" placeholder="${p}"></div>`).join('')}
+    ${hasOpts(it) ? `<div class="field"><div class="lbl">Size</div><div class="chips">${it.opts.map((o, k) => `<button class="chip" data-act="opt" data-v="${k}" aria-pressed="${(f.opt || 0) === k}">${esc(o.l)}<br><span style="color:var(--gold)">${rupee(o.p)}</span></button>`).join('')}</div></div>` : ''}
+    ${it.u === 'sqft' ? `<div class="two"><div class="field"><label for="w">Width (ft)</label><input class="in" id="w" data-bind="w" type="number" min="0.5" step="0.5" value="${f.w}"></div><div class="field"><label for="h">Height (ft)</label><input class="in" id="h" data-bind="h" type="number" min="0.5" step="0.5" value="${f.h}"></div></div>` : ''}
+    ${digital ? '' : `<div class="field"><label for="qty">${it.u === 'set' ? 'Sets of 100' : 'Quantity'}</label><input class="in" id="qty" data-bind="qty" type="number" min="1" step="1" value="${f.qty}"></div>
+    <div class="field"><label for="file">Upload logo or photo (optional)</label><input class="in" id="file" type="file" accept="image/*" data-bind="file"></div>
+    <div class="field"><label for="note">Notes</label><textarea class="in" id="note" data-bind="note" placeholder="Colours, date, anything we should know">${esc(f.note || '')}</textarea></div>`}
+    <div class="sum total"><span>Total</span><span id="total">${rupee(totalOf(it, f))}</span></div>
+    <button class="btn" data-act="review">Continue to checkout</button>
+  </section></main>`;
+}
+function review() {
+  const it = findItem(S.item), f = S.form, x = fees(it), s = sub(it, f), t = s + x.fee + x.ship, pay = payOf(it), ms = methods(it);
+  return `${bar('Checkout', true)}<main class="screen">
+  <section class="card"><h2 style="font-size:15px">Order Summary</h2>
+    <div style="display:flex;gap:12px;align-items:center">${thumb(it)}<div style="min-width:0"><b style="font-family:var(--fd)">${esc(it.n)}</b><div class="note">${esc(detailOf(it, f))}</div></div></div>
+    <div class="sum"><span class="note">Subtotal</span><b>${rupee(s)}</b></div>
+    ${x.fee ? `<div class="sum"><span class="note">Customization fee</span><b>${rupee(x.fee)}</b></div>` : ''}
+    ${physical(it) ? `<div class="sum"><span class="note">Shipping</span><b>${x.ship ? rupee(x.ship) : 'FREE'}</b></div>` : ''}
+    <div class="sum total"><span>Total Amount</span><span>${rupee(t)}</span></div></section>
+  ${contactCard(f)}
+  ${physical(it) ? deliveryCard(f) : ''}
+  ${t > 0 && ms.length > 1 ? `<section class="card"><h2 style="font-size:15px">Payment method</h2><div class="chips">${ms.map(m => `<button class="chip" data-act="paym" data-v="${m}" aria-pressed="${pay === m}">${m === 'upi' ? 'UPI / online' : 'Cash on delivery'}</button>`).join('')}</div></section>` : ''}
+  ${t > 0 && pay === 'cod' ? `<section class="card how"><h2 style="font-size:15px;color:var(--gold)">Cash on delivery</h2><p>Pay ${rupee(t)} in cash when your order is delivered. The shop starts work as soon as you place the order.</p></section>` : ''}
+  ${t > 0 && pay === 'upi' ? `<section class="card how"><h2 style="font-size:15px;color:var(--gold)">${esc(tx('payTitle'))}</h2>
+    <div class="lbl">Pay ${rupee(t)} with</div>
+    <div class="two">${[['Google Pay', 'com.google.android.apps.nbu.paisa.user'], ['PhonePe', 'com.phonepe.app'], ['Paytm', 'net.one97.paytm']].map(([l, p]) => `<a class="btn alt" data-act="paytap" href="intent://pay?${upiQuery(t)}#Intent;scheme=upi;package=${p};end">${l}</a>`).join('')}<a class="btn alt" data-act="paytap" href="upi://pay?${upiQuery(t)}">Other UPI apps</a></div>
+    <p class="note">Tap your app, pay, then come back here. The app opens only on a phone that has it installed.</p>
+    <ol><li>Or open any UPI app and pay ${rupee(t)} to the UPI ID below</li><li>Upload the screenshot</li><li>Enter the reference number and place the order</li></ol>
+    <div class="upi"><span>${esc(S.cfg.upi)}</span><button class="btn alt sm" data-act="copy">Copy</button></div>
+    <div class="field"><label for="shot">Payment screenshot</label><input class="in" id="shot" type="file" accept="image/*" data-bind="shot"></div>
+    <div class="field"><label for="ref">UPI reference number</label><input class="in" id="ref" data-bind="ref" inputmode="numeric" value="${esc(f.ref || '')}" placeholder="12-digit UTR / Txn ID"></div>
+    ${S.payErr ? `<p class="err">${esc(S.payErr)}</p>` : ''}
+    <p class="note">The shop owner checks your payment before work starts. A QR code can be added in the real app.</p></section>` : ''}
+  <button class="btn" data-act="place">${t > 0 && pay === 'upi' ? 'I have paid, place order' : 'Place order'}</button></main>`;
+}
+function done() {
+  const o = S.last;
+  return `${bar('Order placed')}<main class="screen">
+  <section class="card"><span class="pill good" style="align-self:flex-start">${esc(tx('thanks'))}</span><h2 style="font-size:22px;color:var(--gold)">#${o.id}</h2><p>${esc(o.item)} · ${esc(o.detail)} · <b>${rupee(o.total)}</b></p><p class="note">Follow the status in My orders. You can leave feedback after delivery.</p></section>
+  <div class="notif"><small>The shop owner gets this on their phone</small><b>New order ${o.id}</b><br>${esc(o.name)} (${esc(o.phone)}) · ${esc(o.item)} ${esc(o.detail)} · ${rupee(o.total)}${o.method === 'cod' ? ' · Cash on delivery' : o.ref ? ' · UPI ref ' + esc(o.ref) : ''}${o.addr ? ' · Deliver to: ' + esc(addrLine(o.addr)) : o.dm === 'pickup' ? ' · Pickup from shop' : ''}</div>
+  ${waUrl(o) ? `<a class="btn" href="${waUrl(o)}" target="_blank" rel="noopener">Send order details on WhatsApp</a><p class="note">WhatsApp may have opened already. Tap Send there so the shop receives your full order details.</p>` : '<p class="note">The shop will see your order in the app.</p>'}
+  <button class="btn" data-act="goorders">Track my order</button><button class="btn alt" data-act="gohome">Back to home</button></main>`;
+}
+function ordersScreen() {
+  const list = mine();
+  return `<header class="bar"><h1 style="font-size:22px">My orders</h1></header><main class="screen">${list.length ? list.map(o => `<section class="card">
+    <div class="row-h"><div style="min-width:0"><div class="note">Order ID</div><b style="font-family:var(--fd);color:var(--gold);font-size:17px">#${o.id}</b></div>${statusPill(o)}</div>
+    <div class="li" style="cursor:default"><div><b>${esc(o.item)}</b><small>${esc(o.detail)} · ${fmt(o.ts)}</small></div><span class="price">${rupee(o.total)}</span></div>
+    <h3 style="font-size:15px">Delivery Progress</h3>${timeline(o)}
+    ${!o.paid ? `<p class="note">${o.method === 'cod' ? 'Pay cash when your order is delivered.' : 'Waiting for the shop to confirm your payment.'}</p>` : ''}
+    ${o.status === 5 ? (o.fb ? `<div><div class="lbl">Your feedback</div>${starRow(o.fb.r, '', false)}<p class="note">${esc(o.fb.t)}</p></div>` : `<div class="field"><div class="lbl">Rate this order</div>${starRow(S.draft[o.id] || 0, o.id, true)}<textarea class="in" id="fb-${o.id}" placeholder="Tell us how it was"></textarea><button class="btn sm" style="align-self:flex-start" data-act="fb" data-id="${o.id}">Send feedback</button></div>`) : ''}
+  </section>`).join('') : '<p class="note">No orders yet. Pick a service on the Home tab.</p>'}</main>`;
+}
+function profile() {
+  const list = mine(), ini = (S.user.label || '?').replace(/[^A-Za-z0-9]/g, '').slice(0, 2).toUpperCase() || 'U';
+  return `<main class="screen"><div class="prof"><div class="av">${ini}</div><h2 style="font-size:20px">${esc(S.user.label)}</h2><span class="note" style="color:var(--gold)">${esc(S.cfg.store)} customer</span>
+  <div class="ps"><div><b>${list.length}</b><span>Orders</span></div><div><b>${list.filter(o => o.status === 5).length}</b><span>Delivered</span></div><div><b>${list.filter(o => o.status < 5).length}</b><span>In progress</span></div></div></div>
+  <section><div class="row-h" style="margin-bottom:10px"><h2>Recent Orders</h2><button class="link" data-act="tab" data-v="orders">View All</button></div><div class="list">${list.slice(0, 3).map(o => `<div class="li" style="cursor:default"><div><b>${esc(o.item)}</b><small>#${o.id} · ${fmt(o.ts)}</small></div><div style="flex:none;text-align:right"><span class="price">${rupee(o.total)}</span><br>${statusPill(o)}</div></div>`).join('') || '<p class="note">No orders yet.</p>'}</div></section>
+  <button class="btn alt" data-act="logout">Log out</button></main>`;
+}
+const nav = items => `<nav class="nav">${items.map(([id, ic, l]) => `<button data-act="${S.mode === 'admin' ? 'atab' : 'tab'}" data-v="${id}" aria-current="${(S.mode === 'admin' ? S.admin.tab : S.tab) === id}">${svg(ic, 22)}${l}</button>`).join('')}</nav>`;
+function customerView() {
+  if (!S.ready) return loadingView();
+  if (!S.user) return login();
+  const NAV = nav([['home', 'home', 'Home'], ['orders', 'list', 'My orders'], ['profile', 'user', 'Profile']]);
+  const sub2 = { cat: category, item: itemScreen, review, done };
+  if (S.screen !== 'main' && sub2[S.screen]) return sub2[S.screen]() + (S.screen === 'done' ? NAV : '');
+  return ({ home, orders: ordersScreen, profile }[S.tab])() + NAV;
+}
+
+/* ---------- admin ---------- */
+function chart() {
+  const now = new Date(), months = [];
+  for (let i = 5; i >= 0; i--) { const d = new Date(now.getFullYear(), now.getMonth() - i, 1); months.push({ k: d.getFullYear() * 12 + d.getMonth(), l: d.toLocaleString('en-US', { month: 'short' }), v: 0 }); }
+  S.orders.filter(o => o.paid).forEach(o => { const d = new Date(o.ts), m = months.find(x => x.k === d.getFullYear() * 12 + d.getMonth()); if (m) m.v += o.total; });
+  const max = Math.max(1, ...months.map(m => m.v)), W = 320, H = 170, px = 24, top0 = 26, bh = 104;
+  const pts = months.map((m, i) => [px + (W - px * 2) * i / 5, top0 + bh - (m.v / max) * bh]);
+  const line = 'M' + pts.map(p => p.map(n => n.toFixed(1)).join(',')).join(' L'), area = line + ` L${pts[5][0].toFixed(1)},${top0 + bh} L${pts[0][0]},${top0 + bh}Z`;
+  const last = pts[5];
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Revenue by month, ${months.map(m => m.l + ' ' + rupee(m.v)).join(', ')}">
+  ${[0, 0.5, 1].map(g => `<line x1="${px}" x2="${W - px}" y1="${top0 + bh - g * bh}" y2="${top0 + bh - g * bh}" stroke="var(--line)" stroke-width="1" stroke-dasharray="${g ? '3 4' : '0'}"/>`).join('')}
+  <path d="${area}" fill="var(--gold)" fill-opacity="0.16"/><path d="${line}" fill="none" stroke="var(--gold)" stroke-width="2.2" stroke-linejoin="round"/>
+  ${pts.map(p => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3" fill="var(--gold)"/>`).join('')}
+  <circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="5.5" fill="none" stroke="var(--gold)" stroke-width="1.5"/>
+  <text class="v" x="${last[0].toFixed(1)}" y="${Math.max(12, last[1] - 10).toFixed(1)}" text-anchor="end">${rupee(months[5].v)}</text>
+  <text x="${px}" y="14">${rupee(max)}</text>
+  ${months.map((m, i) => `<text x="${pts[i][0].toFixed(1)}" y="${H - 14}" text-anchor="middle">${m.l}</text>`).join('')}</svg>`;
+}
+function adminDash() {
+  const o = S.orders, rev = o.filter(x => x.paid).reduce((a, x) => a + x.total, 0);
+  const stat = (ic, v, l) => `<div class="stat">${svg(ic, 20)}<b>${v}</b><span>${l}</span></div>`;
+  return `<main class="screen">${seedCard()}<div class="stats">${stat('wallet', rupee(rev), 'Revenue (payment confirmed)')}${stat('bag', o.length, 'Total orders')}${stat('users', new Set(o.map(x => x.cust || x.name)).size, 'Customers')}${stat('tag', o.filter(x => !x.paid && x.method !== 'cod').length, 'Payments to check')}</div>
+  <section><h2 class="sec" style="margin-bottom:10px">Management Tools</h2><div class="two"><button class="btn alt" data-act="padd" data-id="${S.cats[0]?.id || ''}">Add Product</button><button class="btn alt" data-act="atab" data-v="settings">Store Settings</button></div></section>
+  <section class="card"><h2 style="font-size:15px">Revenue Growth</h2>${chart()}<p class="note">Confirmed payments by month.</p></section>
+  <section><div class="row-h" style="margin-bottom:10px"><h2>Recent Orders</h2><button class="link" data-act="atab" data-v="orders">View All</button></div><div class="list">${o.slice(0, 4).map(orderRow).join('')}</div></section>
+  <section><h2 class="sec" style="margin-bottom:10px">Live Notifications</h2><div class="list">${notesNow().map(n => `<div class="nt"><i>${svg(n.ic, 20)}</i><div><b>${esc(n.t)}</b><small>${ago(n.ts)}</small></div></div>`).join('') || '<p class="note">Nothing new.</p>'}</div></section></main>`;
+}
+const orderRow = x => `<button class="li" data-act="open" data-id="${x.id}"><span class="av">${(x.name || 'D').replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase() || 'C'}</span><div><b>${esc(x.name || 'Demo customer')}</b><small>${esc(x.item)} · ${fmt(x.ts)}</small></div><div style="flex:none;text-align:right"><span class="price">${rupee(x.total)}</span><br>${statusPill(x)}</div></button>`;
+function adminOrders() {
+  const A = S.admin, o = S.orders;
+  if (A.open) {
+    const x = o.find(y => y.id === A.open);
+    const wa = encodeURIComponent(`Hello ${x.name}, your ${S.cfg.store} order ${x.id} (${x.item}) is now: ${stepsNow()[x.status][0]}.`);
+    return `<main class="screen"><button class="btn alt sm" style="align-self:flex-start" data-act="aback">${svg('back', 16)} All orders</button>
+    <section class="card"><div class="row-h"><b style="font-family:var(--fd);font-size:18px;color:var(--gold)">#${x.id}</b>${statusPill(x)}</div>
+      <div class="sum"><span class="note">Customer</span><span>${esc(x.name || 'Demo customer')}</span></div>
+      <div class="sum"><span class="note">Phone</span><span>${esc(x.phone || 'not set')}</span></div>
+      <div class="sum"><span class="note">Item</span><span>${esc(x.item)}</span></div>
+      <div class="sum"><span class="note">Size / details</span><span>${esc(x.detail)}</span></div>
+      <div class="sum"><span class="note">Quantity</span><span>${esc(x.qty || 1)}</span></div>
+      ${(x.details || []).map(d => `<div class="sum"><span class="note">${esc(d.l)}</span><span>${esc(d.v)}</span></div>`).join('')}
+      ${x.file ? `<div class="sum"><span class="note">Logo / photo</span><span>${esc(x.file)}</span></div>` : ''}
+      ${x.note ? `<div class="sum"><span class="note">Notes</span><span>${esc(x.note)}</span></div>` : ''}
+      ${x.addr ? `<div class="sum"><span class="note">Deliver to</span><span>${esc(addrLine(x.addr))}</span></div><a class="btn alt sm" style="align-self:flex-start" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([x.addr.line, x.addr.city, x.addr.pin].join(', '))}" target="_blank" rel="noopener">Open in Google Maps</a>` : x.dm === 'pickup' ? '<div class="sum"><span class="note">Delivery</span><span>Customer picks up from the shop</span></div>' : ''}
+      <div class="sum total"><span>Amount</span><span>${rupee(x.total)}</span></div></section>
+    <section class="card"><h2 style="font-size:15px">Payment</h2>
+      <div class="sum"><span class="note">Method</span><span>${x.method === 'cod' ? 'Cash on delivery' : x.method === 'free' ? 'Free' : 'UPI'}</span></div>
+      ${x.method === 'cod' || x.method === 'free' ? '' : `<div class="sum"><span class="note">UPI reference</span><span>${esc(x.ref || 'none')}</span></div>`}
+      ${x.shot ? `<div class="sum"><span class="note">Screenshot</span><span>${esc(x.shot)}</span></div>` : ''}
+      ${x.paid ? '<span class="pill good" style="align-self:flex-start">Confirmed</span>' : `<button class="btn" data-act="confirm" data-id="${x.id}">${x.method === 'cod' ? 'Mark cash received' : 'Confirm payment received'}</button><p class="note">${x.method === 'cod' ? 'Press this after the customer pays cash on delivery.' : 'Check the amount and reference in your bank app first.'}</p>`}</section>
+    <section class="card"><h2 style="font-size:15px">Delivery status</h2>
+      <div class="field"><label for="st">Update status</label><select class="in" id="st" data-st="${x.id}">${stepsNow().map((s, i) => `<option value="${i}" ${x.status === i ? 'selected' : ''}>${s[0]}</option>`).join('')}</select></div>
+      ${timeline(x)}
+      ${x.phone ? `<a class="btn alt" style="text-align:center;text-decoration:none;display:block" href="https://wa.me/91${x.phone}?text=${wa}" target="_blank" rel="noopener">WhatsApp customer</a>` : ''}</section>
+    ${x.fb ? `<section class="card"><div class="lbl">Customer feedback</div>${starRow(x.fb.r, '', false)}<p>${esc(x.fb.t) || '<span class="note">No comment</span>'}</p></section>` : ''}</main>`;
+  }
+  const f = A.filter, shown = o.filter(x => f === 'all' || (f === 'new' && !x.paid && x.method !== 'cod') || (f === 'prog' && (x.paid || x.method === 'cod') && x.status < 5) || (f === 'done' && x.status === 5));
+  const active = o.filter(x => x.status < 5).length, comp = o.filter(x => x.status === 5).length, rev = o.filter(x => x.paid).reduce((a, x) => a + x.total, 0);
+  return `<main class="screen"><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">${[[active, 'Active'], [comp, 'Completed'], [rupee(rev), 'Revenue']].map(([v, l]) => `<div class="stat" style="align-items:center;text-align:center"><b style="font-size:18px;color:var(--gold)">${v}</b><span>${l}</span></div>`).join('')}</div>
+  <div class="chips" role="group" aria-label="Filter orders">${[['all', 'All'], ['new', 'Payment pending'], ['prog', 'In progress'], ['done', 'Delivered']].map(([k, l]) => `<button class="chip" data-act="filter" data-v="${k}" aria-pressed="${f === k}">${l}</button>`).join('')}</div>
+  <div class="list">${shown.length ? shown.map(orderRow).join('') : '<p class="note">No orders here.</p>'}</div></main>`;
+}
+function catalog() {
+  const A = S.admin;
+  if (A.edit) return editor();
+  if (A.cedit) return catEditor();
+  return `<main class="screen"><div class="row-h"><p class="note" style="flex:1">Add photos, sizes and prices. Customers see changes at once.</p></div>
+  <button class="btn alt" data-act="cadd">+ Add category</button>
+  ${S.cats.map(c => `<section class="card"><div class="row-h"><h3 style="font-size:16px">${esc(c.en)}</h3><div style="display:flex;gap:8px"><button class="btn alt sm" data-act="cedit" data-id="${c.id}">Edit</button><button class="btn sm" data-act="padd" data-id="${c.id}">+ Add</button></div></div>
+  ${c.items.length ? c.items.map(i => `<button class="li" data-act="pedit" data-id="${i.id}">${thumb(i)}<div><b>${esc(i.n)}</b><small>${hasOpts(i) ? i.opts.length + ' sizes' : UNIT[i.u]}${i.badge ? ' · ' + i.badge : ''}</small></div><span class="price">${priceLabel(i)}</span></button>`).join('') : '<p class="note">No products yet.</p>'}</section>`).join('')}</main>`;
+}
+function editor() {
+  const e = S.admin.edit, d = e.draft;
+  return `<header class="bar c"><button class="ib ink" data-act="pcancel" aria-label="Back">${svg('back', 20)}</button><h1>${e.isNew ? 'Add product' : 'Edit product'}</h1><span style="width:40px"></span></header>
+  <main class="screen"><section class="card">
+  ${e.isNew ? `<div class="field"><label for="e-c">Category</label><select class="in" id="e-c" data-ecat="1">${S.cats.map(c => `<option value="${c.id}" ${e.cat === c.id ? 'selected' : ''}>${esc(c.en)}</option>`).join('')}</select></div>` : ''}
+  <div class="field"><label for="e-n">Product name</label><input class="in" id="e-n" data-e="n" value="${esc(d.n)}" placeholder="e.g. Wedding Frame"></div>
+  <div class="field"><label for="e-img">Photo</label>${d.img ? `<img class="hero-img" src="${d.img}" alt="">` : '<div class="thumb big">No photo yet</div>'}<input class="in" id="e-img" type="file" accept="image/*" data-eimg="1"></div>
+  <div class="two"><div class="field"><label for="e-u">Priced</label><select class="in" id="e-u" data-e="u">${Object.entries(UNIT).map(([k, v]) => `<option value="${k}" ${d.u === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+  <div class="field"><label for="e-p">Price (₹)</label><input class="in" id="e-p" data-e="p" type="number" min="0" value="${d.p}"></div></div>
+  <div class="field"><label for="e-b">Badge</label><select class="in" id="e-b" data-e="badge">${BADGES.map(b => `<option value="${b}" ${d.badge === b ? 'selected' : ''}>${b || 'None'}</option>`).join('')}</select></div>
+  <div class="field"><div class="lbl">Sizes (optional, each size has its own price)</div>
+    ${d.opts.map((o, i) => `<div style="display:flex;gap:8px;align-items:center"><input class="in" id="eo-${i}-l" aria-label="Size ${i + 1} name" data-eo="${i}:l" value="${esc(o.l)}" placeholder="8 × 10 in"><input class="in" id="eo-${i}-p" style="flex:0 0 96px" aria-label="Size ${i + 1} price" data-eo="${i}:p" type="number" min="0" value="${o.p}"><button class="ib ink" data-act="orm" data-v="${i}" aria-label="Remove size">×</button></div>`).join('')}
+    <button class="btn alt sm" style="align-self:flex-start" data-act="oadd">+ Add size</button></div>
+  ${e.err ? `<p class="err">${esc(e.err)}</p>` : ''}
+  <button class="btn" data-act="psave">Save product</button>
+  ${e.isNew ? '' : `<button class="btn alt" data-act="pdel">${e.sure ? 'Tap again to delete' : 'Delete product'}</button>`}</section></main>`;
+}
+function catEditor() {
+  const e = S.admin.cedit, d = e.draft;
+  return `<header class="bar c"><button class="ib ink" data-act="ccancel" aria-label="Back">${svg('back', 20)}</button><h1>${e.isNew ? 'Add category' : 'Edit category'}</h1><span style="width:40px"></span></header>
+  <main class="screen"><section class="card">
+  <div class="field"><label for="c-en">Name (English)</label><input class="in" id="c-en" data-ce="en" value="${esc(d.en)}"></div>
+  <div class="field"><label for="c-ta">Name (Tamil, optional)</label><input class="in" id="c-ta" data-ce="ta" value="${esc(d.ta)}"></div>
+  <div class="field"><div class="lbl">Icon</div><div class="chips">${ICONS.map(n => `<button class="chip" style="padding:8px" data-act="cicon" data-v="${n}" aria-pressed="${d.ic === n}" aria-label="${n}">${svg(n, 22)}</button>`).join('')}</div></div>
+  <div class="field"><label for="c-f">Order form</label><select class="in" id="c-f" data-ce="form">${Object.entries(FORMS).map(([k, v]) => `<option value="${k}" ${d.form === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+  ${e.err ? `<p class="err">${esc(e.err)}</p>` : ''}
+  <button class="btn" data-act="csave">Save category</button>
+  ${e.isNew ? '' : `<button class="btn alt" data-act="cdel">${e.sure ? 'Tap again to delete (products inside are removed)' : 'Delete category'}</button>`}</section></main>`;
+}
+function settings() {
+  const c = S.cfg;
+  const fld = (k, l, t) => `<div class="field"><label for="s-${k}">${l}</label><input class="in" id="s-${k}" data-cfg="${k}" ${t === 'n' ? 'type="number" min="0"' : ''} value="${esc(c[k])}"></div>`;
+  return `<main class="screen">
+  <section class="card"><h2 style="font-size:15px">Store details</h2>${fld('store', 'Store name')}${fld('tag', 'Tagline')}${fld('upi', 'Your UPI ID (customers pay here)')}${fld('payee', 'Name shown in UPI apps (optional)')}${fld('notify', 'WhatsApp number that receives orders (10 digits)')}
+    <div class="two">${fld('custFee', 'Customization fee (₹)', 'n')}${fld('ship', 'Shipping (₹, 0 = free)', 'n')}</div></section>
+  <section class="card"><div class="row-h"><h2 style="font-size:15px">Home banners</h2><button class="btn sm" data-act="badd">+ Add</button></div>
+    ${S.banners.map(b => `<div class="card" style="background:var(--card2)">${b.img ? `<img class="hero-img" style="max-height:110px" src="${b.img}" alt="">` : ''}
+      <div class="field"><label for="bt-${b.id}">Title</label><input class="in" id="bt-${b.id}" data-bn="${b.id}:t" value="${esc(b.t)}"></div>
+      <div class="field"><label for="bs-${b.id}">Subtitle</label><input class="in" id="bs-${b.id}" data-bn="${b.id}:s" value="${esc(b.s)}"></div>
+      <div class="field"><label for="bc-${b.id}">Opens category</label><select class="in" id="bc-${b.id}" data-bn="${b.id}:cat"><option value="">None</option>${S.cats.map(x => `<option value="${x.id}" ${b.cat === x.id ? 'selected' : ''}>${esc(x.en)}</option>`).join('')}</select></div>
+      <div class="field"><label for="bi-${b.id}">Photo</label><input class="in" id="bi-${b.id}" type="file" accept="image/*" data-bimg="${b.id}"></div>
+      <button class="btn alt sm" style="align-self:flex-start" data-act="brm" data-id="${b.id}">Remove banner</button></div>`).join('') || '<p class="note">No banners. The Featured Collections row is hidden.</p>'}</section>
+  <section class="card"><h2 style="font-size:15px">Payment methods</h2>
+    <label style="display:flex;gap:10px;align-items:center"><input type="checkbox" id="pm-upi" data-pm="payUpi" ${c.payUpi !== false ? 'checked' : ''}> Accept UPI payments</label>
+    <label style="display:flex;gap:10px;align-items:center"><input type="checkbox" id="pm-cod" data-pm="payCod" ${c.payCod !== false ? 'checked' : ''}> Accept cash on delivery</label>
+    <p class="note">Cash on delivery is not offered for downloadable files. For cash orders you press "Mark cash received" after delivery.</p></section>
+  <section class="card"><h2 style="font-size:15px">Logo and colour</h2>
+    ${c.logo ? `<img class="logo-img" src="${c.logo}" alt="Logo">` : '<p class="note">No logo yet. The KS box is shown on the login page.</p>'}
+    <div class="field"><label for="s-logo">Upload logo (PNG with a clear background looks best)</label><input class="in" id="s-logo" type="file" accept="image/*" data-logo="1"></div>
+    ${c.logo ? '<button class="btn alt sm" style="align-self:flex-start" data-act="logorm">Remove logo</button>' : ''}
+    <div class="field"><label for="s-gold">Main colour</label><input class="in" style="height:44px;padding:4px" id="s-gold" type="color" data-cfg="gold" value="${esc(c.gold)}"></div></section>
+  <section class="card"><h2 style="font-size:15px">App texts</h2>${Object.keys(TXT).map(k => `<div class="field"><label for="tx-${k}">${TXT[k][0]}</label><input class="in" id="tx-${k}" data-tx="${k}" value="${esc(tx(k))}"></div>`).join('')}<button class="btn alt sm" style="align-self:flex-start" data-act="resettx">Restore original texts</button></section>
+  <section class="card"><h2 style="font-size:15px">Order status names</h2><p class="note">Customers see these in order tracking.</p>${stepsNow().map((s, i) => `<div class="field"><label for="sn-${i}">Step ${i + 1}</label><input class="in" id="sn-${i}" data-stx="${i}:n" value="${esc(s[0])}"><input class="in" id="sd-${i}" aria-label="Step ${i + 1} description" data-stx="${i}:d" value="${esc(s[1])}"></div>`).join('')}</section>
+  <section class="card"><h2 style="font-size:15px">Order alerts on Telegram</h2><p class="note">Every new order is sent to your Telegram, even when the app is closed. Make a bot with @BotFather, paste its token here, send the bot a message, then paste your chat id.</p>
+    <div class="field"><label for="tg-t">Bot token</label><input class="in" id="tg-t" data-nf="tgToken" autocomplete="off" value="${esc(S.tg.tgToken || '')}"></div>
+    <div class="field"><label for="tg-c">Chat id</label><input class="in" id="tg-c" data-nf="tgChat" autocomplete="off" inputmode="numeric" value="${esc(S.tg.tgChat || '')}"></div>
+    <button class="btn alt" data-act="tgtest">Send a test message</button></section>
+  <section class="card"><h2 style="font-size:15px">Owner login</h2><p class="note">Owner accounts: <b>${esc(ADMINS.join(', '))}</b>. Passwords are managed in Firebase: Authentication > Users. Customers never see the owner login.</p></section></main>`;
+}
+function adminView() {
+  const A = S.admin, head = `<header class="bar"><div style="flex:1"><div class="brand">${esc(S.cfg.store).toUpperCase()}</div><div class="sub">Admin Control Center</div></div><button class="btn alt sm" data-act="logout">Log out</button></header>`;
+  const NAV = nav([['dash', 'grid', 'Dashboard'], ['orders', 'list', 'Orders'], ['catalog', 'tag', 'Products'], ['settings', 'cog', 'Settings']]);
+  const hideHead = A.edit || A.cedit;
+  return (hideHead ? '' : head) + ({ dash: adminDash, orders: adminOrders, catalog, settings }[A.tab])() + NAV;
+}
+/* ---------- events ---------- */
+function render(keep) {
+  applyTheme();
+  $demo.innerHTML = demoBar();
+  $app.innerHTML = S.mode === 'admin' ? adminView() : customerView();
+  if (!keep) window.scrollTo(0, 0);
+}
+let dirty = false;
+const editing = () => { const a = document.activeElement; return !!(a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName) && a.type !== 'checkbox' && a.type !== 'file' && $app.contains && $app.contains(a)); };
+function rerender() { if (editing()) { dirty = true; return; } render(true); }
+document.addEventListener('focusout', () => { if (!dirty) return; setTimeout(() => { if (dirty && !editing()) { dirty = false; render(true); } }, 250); });
+const val = id => (document.getElementById(id)?.value || '').trim();
+function readImg(file, cb, png) {
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = () => {
+    const im = new Image();
+    im.onload = () => {
+      const s = Math.min(1, (png ? 400 : 600) / Math.max(im.width, im.height)), c = document.createElement('canvas');
+      c.width = Math.round(im.width * s); c.height = Math.round(im.height * s);
+      c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+      cb(png ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.72));
+    };
+    im.onerror = () => toast('Could not read that image. Try a JPG or PNG.');
+    im.src = r.result;
+  };
+  r.readAsDataURL(file);
+}
+function setStatus(o, n) {
+  if (n > 0 && !o.paid && o.method !== 'cod') { toast('Confirm the payment first.'); return false; }
+  const hist = (o.hist || []).slice(); for (let i = 0; i <= n; i++) if (!hist[i]) hist[i] = Date.now();
+  hist.length = n + 1; o.status = n; o.hist = hist;
+  KS().update('orders/' + o.id, { status: n, hist }).catch(fail); return true;
+}
+const idToEmail = raw => {
+  const r = String(raw || '').trim().toLowerCase();
+  if (r.includes('@')) return r;
+  const dg = r.replace(/\D/g, '').slice(-10);
+  return dg.length === 10 ? dg + '@ksdesigns.app' : '';
+};
+function notifyOwner(o) {
+  sendTG(waText(o).replace(/\*/g, '') + '\nOpen the app: ' + (typeof location !== 'undefined' ? location.origin : ''));
+  const wu = waUrl(o); if (wu && typeof window.open === 'function') window.open(wu, '_blank');
+}
+function act(a, d) {
+  const A = S.admin;
+  switch (a) {
+    case 'auth': S.auth = d.v; S.authErr = ''; render(); break;
+    case 'logotap': {
+      const now = Date.now(); S.taps = (S.taps || []).filter(t => now - t < 4000); S.taps.push(now);
+      if (S.taps.length >= 5) { S.taps = []; S.auth = 'owner'; S.authErr = ''; render(); }
+      break;
+    }
+    case 'google': {
+      S.authErr = '';
+      KS().google().catch(e => {
+        if (e && ['auth/popup-closed-by-user', 'auth/cancelled-popup-request'].includes(e.code)) return;
+        S.authErr = e && e.code === 'auth/unauthorized-domain' ? 'This web address is not allowed yet. The owner must add it under Firebase > Authentication > Settings > Authorized domains.' : 'Google sign-in did not work. Please try again.';
+        console.error(e); render(true);
+      });
+      break;
+    }
+    case 'owner': {
+      const raw = val('em'), pw = document.getElementById('pw')?.value || '', email = idToEmail(raw);
+      if (!raw) { S.authErr = 'Enter your phone number or email.'; render(true); break; }
+      if (!email) { S.authErr = 'Enter a valid 10-digit phone number or an email.'; render(true); break; }
+      if (pw.length < 6) { S.authErr = 'Password needs at least 6 characters.'; render(true); break; }
+      S.ownerTry = true; S.authErr = '';
+      KS().login(email, pw).catch(e => { S.ownerTry = false; S.authErr = 'Wrong email/phone or password.'; console.error(e); render(true); });
+      break;
+    }
+    case 'dm': S.form.dm = d.v; S.addrErr = ''; render(true); break;
+    case 'logout': S.screen = 'main'; S.auth = 'login'; S.authErr = ''; S.ownerTry = false; KS().logout().catch(() => {}); break;
+    case 'tab': S.tab = d.v; S.screen = 'main'; render(); break;
+    case 'gohome': S.tab = 'home'; S.screen = 'main'; render(); break;
+    case 'goorders': S.tab = 'orders'; S.screen = 'main'; render(); break;
+    case 'cat': S.cat = d.id; S.screen = 'cat'; render(); break;
+    case 'banner': { const b = S.banners.find(x => x.id === d.id); if (b && b.cat && catOf(b.cat)) { S.cat = b.cat; S.screen = 'cat'; render(); } break; }
+    case 'item': S.item = d.id; S.form = { w: 3, h: 2, qty: 1, opt: 0, note: '', file: '' }; S.screen = 'item'; render(); break;
+    case 'opt': S.form.opt = +d.v; render(true); break;
+    case 'pwtoggle': {
+      const inp = document.getElementById(d.for), btn = document.querySelector(`[data-for="${d.for}"]`);
+      if (inp) { const show = inp.type === 'password'; inp.type = show ? 'text' : 'password'; if (btn) { btn.textContent = show ? 'Hide' : 'Show'; btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password'); } }
+      break;
+    }
+    case 'paym': S.form.pay = d.v; S.payErr = ''; render(true); break;
+    case 'back': S.screen = S.screen === 'review' ? 'item' : S.screen === 'item' ? 'cat' : 'main'; S.payErr = ''; render(); break;
+    case 'review': {
+      const it = findItem(S.item); if (it.u !== 'file' && sub(it, S.form) <= 0 && it.p > 0) { toast('Enter a size and quantity first.'); break; }
+      if (it.u === 'file') S.form.qty = 1;
+      const pf = S.profile || {}, ab = S.addrBook || {};
+      S.form.contact = { name: pf.name || S.user.label || '', phone: pf.phone || '' };
+      S.form.addr = { name: ab.name || S.form.contact.name, phone: ab.phone || S.form.contact.phone, line: ab.line || '', city: ab.city || '', pin: ab.pin || '', lm: ab.lm || '' };
+      S.form.dm = 'delivery'; S.form.oid = newId(); S.form.ref = ''; S.addrErr = ''; S.contactErr = ''; S.screen = 'review'; render(); break;
+    }
+    case 'copy': (navigator.clipboard ? navigator.clipboard.writeText(S.cfg.upi) : Promise.reject()).then(() => toast('UPI ID copied'), () => toast('Select and copy the UPI ID shown')); break;
+    case 'place': {
+      if (S.busy) break;
+      const it = findItem(S.item), f = S.form, t = totalOf(it, f), ref = (f.ref || val('ref') || '').trim(), pay = payOf(it);
+      const ct = f.contact || {}, dm = physical(it) ? (f.dm || 'delivery') : 'none', ad = f.addr || {};
+      const cmiss = (ct.name || '').trim().length < 2 ? 'Enter your name.' : !/^[6-9]\d{9}$/.test(ct.phone || '') ? 'Enter a valid 10-digit mobile number.' : '';
+      S.contactErr = cmiss;
+      if (cmiss) { toast(cmiss); render(true); break; }
+      if (dm === 'delivery') {
+        ad.name = (ad.name || '').trim() || ct.name; ad.phone = (ad.phone || '').trim() || ct.phone;
+        const miss = !(ad.name || '').trim() ? 'Enter the receiver name.' : !/^\d{10}$/.test(ad.phone || '') ? 'Enter a 10-digit phone number.' : !(ad.line || '').trim() ? 'Enter the house / street.' : !(ad.city || '').trim() ? 'Enter your town or city.' : !/^\d{6}$/.test(ad.pin || '') ? 'Enter a 6-digit pincode.' : '';
+        if (miss) { S.addrErr = miss; toast(miss); render(true); break; }
+      }
+      S.addrErr = '';
+      if (t > 0 && pay === 'upi' && !/^\d{6,}$/.test(ref)) { S.payErr = 'Enter the numeric UPI reference number from your payment app.'; render(true); break; }
+      const x = fees(it), kind = it.cat.form, now = Date.now();
+      const o = { id: f.oid || newId(), uid: S.user.id, cust: S.user.id, name: ct.name.trim(), phone: ct.phone, item: it.n, detail: detailOf(it, f), qty: f.qty || 1, sub: sub(it, f), fee: x.fee, ship: x.ship, total: t, details: FIELDS[kind].filter(([k]) => f[k]).map(([k, l]) => ({ l, v: f[k] })), note: f.note || '', file: f.file || '', shot: f.shot || '', ref: pay === 'upi' ? ref : '', method: t > 0 ? pay : 'free', dm, addr: dm === 'delivery' ? { name: ad.name.trim(), phone: ad.phone, line: ad.line.trim(), city: ad.city.trim(), pin: ad.pin, lm: (ad.lm || '').trim() } : null, paid: t === 0, status: 0, ts: now, hist: [now], fb: null };
+      S.busy = true;
+      KS().set('orders/' + o.id, o).then(() => {
+        S.busy = false;
+        const prof = { name: o.name, phone: o.phone, email: S.user.email || '' }; if (o.addr) prof.addr = o.addr;
+        S.profile = Object.assign({}, S.profile || {}, prof); if (o.addr) S.addrBook = o.addr; S.user.label = o.name;
+        KS().set('users/' + S.user.id, prof, true).catch(() => {});
+        S.last = o; S.payErr = ''; S.screen = 'done'; render(); notifyOwner(o);
+      }).catch(e => { S.busy = false; console.error(e); toast('Could not place the order. Check your internet and try again.'); render(true); });
+      break;
+    }
+    case 'rate': { const t = val('fb-' + d.id); S.draft[d.id] = +d.v; render(true); const e = document.getElementById('fb-' + d.id); if (e) e.value = t; break; }
+    case 'fb': {
+      const o = S.orders.find(x => x.id === d.id); if (!S.draft[d.id]) { toast('Tap the stars to rate first.'); break; }
+      const fb = { r: S.draft[d.id], t: val('fb-' + d.id) }; o.fb = fb;
+      KS().update('orders/' + o.id, { fb }).then(() => toast('Thank you for your feedback')).catch(e => { o.fb = null; fail(e); render(true); });
+      render(true); break;
+    }
+    /* admin */
+    case 'atab': A.tab = d.v; A.open = null; A.edit = null; A.cedit = null; render(); break;
+    case 'filter': A.filter = d.v; render(true); break;
+    case 'open': A.tab = 'orders'; A.open = d.id; render(); break;
+    case 'aback': A.open = null; render(); break;
+    case 'confirm': {
+      const o = S.orders.find(x => x.id === d.id); o.paid = true;
+      KS().update('orders/' + o.id, { paid: true }).then(() => toast('Payment confirmed')).catch(e => { o.paid = false; fail(e); render(true); });
+      render(true); break;
+    }
+    case 'seed': {
+      if (S.busy) break; S.busy = true; toast('Loading the starter catalogue...');
+      KS().batch(mkSeedOps()).then(() => { S.busy = false; toast('Starter catalogue loaded'); }).catch(e => { S.busy = false; fail(e); });
+      break;
+    }
+    case 'tgtest': toast(sendTG('Test message from your KS Designs app. New orders will arrive here.') ? 'Test sent. Check Telegram.' : 'Enter the bot token and chat id first.'); break;
+    case 'padd': A.tab = 'catalog'; A.edit = { isNew: true, cat: d.id, draft: { n: '', u: 'pc', p: 0, img: '', badge: '', opts: [] } }; render(); break;
+    case 'pedit': { const c = S.cats.find(x => x.items.some(i => i.id === d.id)), it = c.items.find(i => i.id === d.id); A.edit = { isNew: false, cat: c.id, id: d.id, draft: { ...it, opts: (it.opts || []).map(o => ({ ...o })) } }; render(); break; }
+    case 'pcancel': A.edit = null; render(); break;
+    case 'oadd': A.edit.draft.opts.push({ l: '', p: A.edit.draft.p || 0 }); render(true); break;
+    case 'orm': A.edit.draft.opts.splice(+d.v, 1); render(true); break;
+    case 'psave': {
+      const e = A.edit, dr = e.draft; dr.n = (dr.n || '').trim(); dr.opts = dr.opts.filter(o => (o.l || '').trim());
+      if (!dr.n) { e.err = 'Enter a product name.'; render(true); break; }
+      if (!dr.opts.length && !(dr.p > 0) && dr.badge !== 'FREE') { e.err = 'Enter a price, add a size with a price, or set the badge to FREE.'; render(true); break; }
+      const id = e.isNew ? e.cat + 'n' + Date.now() : e.id, ex = S.itemsRaw.find(i => i.id === id);
+      KS().set('items/' + id, { cat: e.cat, n: dr.n, u: dr.u, p: +dr.p || 0, badge: dr.badge || '', img: dr.img || '', opts: dr.opts.map(o => ({ l: String(o.l).trim(), p: +o.p || 0 })), o: ex ? (ex.o || 0) : Date.now() })
+        .then(() => { A.edit = null; toast('Saved. Customers can see it now.'); render(); }).catch(er => { e.err = 'Could not save. Check your internet and that you are logged in as owner.'; console.error(er); render(true); });
+      break;
+    }
+    case 'pdel': {
+      const e = A.edit; if (!e.sure) { e.sure = true; render(true); break; }
+      KS().del('items/' + e.id).then(() => { A.edit = null; toast('Product deleted'); render(); }).catch(fail); break;
+    }
+    case 'cadd': A.cedit = { isNew: true, draft: { en: '', ta: '', ic: 'star', form: 'plain' } }; render(); break;
+    case 'cedit': { const c = catOf(d.id); A.cedit = { isNew: false, id: c.id, draft: { en: c.en, ta: c.ta, ic: c.ic, form: c.form } }; render(); break; }
+    case 'ccancel': A.cedit = null; render(); break;
+    case 'cicon': A.cedit.draft.ic = d.v; render(true); break;
+    case 'csave': {
+      const e = A.cedit, dr = e.draft; dr.en = (dr.en || '').trim();
+      if (!dr.en) { e.err = 'Enter a category name.'; render(true); break; }
+      const id = e.isNew ? 'c' + Date.now() : e.id, ex = S.catsRaw.find(c => c.id === id);
+      KS().set('cats/' + id, { en: dr.en, ta: dr.ta || '', ic: dr.ic, form: dr.form, o: ex ? (ex.o || 0) : Date.now() })
+        .then(() => { A.cedit = null; toast('Category saved'); render(); }).catch(er => { e.err = 'Could not save. Are you logged in as owner?'; console.error(er); render(true); });
+      break;
+    }
+    case 'cdel': {
+      const e = A.cedit; if (!e.sure) { e.sure = true; render(true); break; }
+      const ops = [['del', 'cats/' + e.id]]; S.itemsRaw.filter(i => i.cat === e.id).forEach(i => ops.push(['del', 'items/' + i.id]));
+      S.banners.filter(b => b.cat === e.id).forEach(b => ops.push(['set', 'banners/' + b.id, { t: b.t || '', s: b.s || '', img: b.img || '', cat: '', o: b.o || 0 }]));
+      KS().batch(ops).then(() => { A.cedit = null; toast('Category deleted'); render(); }).catch(fail); break;
+    }
+    case 'paytap': toast('Pay in your UPI app, then come back and enter the reference number.'); break;
+    case 'logorm': S.cfg.logo = ''; saveCfg(true); render(true); break;
+    case 'resettx': S.cfg.text = {}; S.cfg.stepTx = []; saveCfg(true); toast('Original texts restored'); render(true); break;
+    case 'badd': { const b = { id: 'b' + Date.now(), t: 'New banner', s: 'Short line about the offer', img: '', cat: '', o: Date.now() }; S.banners.push(b); saveBanner(b, true); render(true); break; }
+    case 'brm': S.banners = S.banners.filter(b => b.id !== d.id); KS().del('banners/' + d.id).catch(fail); render(true); break;
+  }
+}
+document.addEventListener('click', e => { const t = e.target.closest('[data-act]'); if (t) act(t.dataset.act, t.dataset); });
+document.addEventListener('input', e => {
+  const t = e.target, A = S.admin;
+  if (t.id === 'q') {
+    const q = t.value.toLowerCase().trim(), res = document.getElementById('sres'), hm = document.getElementById('hm');
+    const hits = q ? allItems().filter(i => (i.n + ' ' + i.cat.en).toLowerCase().includes(q)).slice(0, 12) : [];
+    res.hidden = !q; hm.hidden = !!q;
+    res.innerHTML = hits.length ? hits.map(i => `<button class="li" data-act="item" data-id="${i.id}">${thumb(i)}<div><b>${esc(i.n)}</b><small>${esc(i.cat.en)}</small></div><span class="price">${priceLabel(i)}</span></button>`).join('') : '<p class="note">Nothing found. Try another word.</p>';
+    return;
+  }
+  if (t.dataset.bind) {
+    const k = t.dataset.bind;
+    if (k === 'file' || k === 'shot') return;
+    S.form[k] = ['w', 'h', 'qty'].includes(k) ? (parseFloat(t.value) || 0) : t.value;
+    const tot = document.getElementById('total'); if (tot) tot.textContent = rupee(totalOf(findItem(S.item), S.form));
+  }
+  if (t.dataset.ct) { S.form.contact = S.form.contact || {}; S.form.contact[t.dataset.ct] = t.value; }
+  if (t.dataset.e) { const k = t.dataset.e; A.edit.draft[k] = k === 'p' ? (parseFloat(t.value) || 0) : t.value; }
+  if (t.dataset.eo) { const [i, k] = t.dataset.eo.split(':'); A.edit.draft.opts[+i][k] = k === 'p' ? (parseFloat(t.value) || 0) : t.value; }
+  if (t.dataset.ce) A.cedit.draft[t.dataset.ce] = t.value;
+  if (t.dataset.cfg) { const k = t.dataset.cfg; S.cfg[k] = ['custFee', 'ship'].includes(k) ? (parseFloat(t.value) || 0) : t.value; if (k === 'gold') applyTheme(); saveCfg(); }
+  if (t.dataset.ad) { S.form.addr = S.form.addr || {}; S.form.addr[t.dataset.ad] = t.value; }
+  if (t.dataset.nf) { S.tg[t.dataset.nf] = t.value; saveTg(); }
+  if (t.dataset.tx) { S.cfg.text = S.cfg.text || {}; S.cfg.text[t.dataset.tx] = t.value; saveCfg(); }
+  if (t.dataset.stx) { const [i, k] = t.dataset.stx.split(':'); S.cfg.stepTx = S.cfg.stepTx || []; S.cfg.stepTx[+i] = S.cfg.stepTx[+i] || {}; S.cfg.stepTx[+i][k] = t.value; saveCfg(); }
+  if (t.dataset.bn) { const [id, k] = t.dataset.bn.split(':'), b = S.banners.find(x => x.id === id); if (b) { b[k] = t.value; saveBanner(b); } }
+});
+document.addEventListener('change', e => {
+  const t = e.target, A = S.admin;
+  if (t.dataset.bind === 'file' || t.dataset.bind === 'shot') S.form[t.dataset.bind] = t.files[0]?.name || '';
+  if (t.dataset.pm) { const k = t.dataset.pm; S.cfg[k] = t.checked; if (S.cfg.payUpi === false && S.cfg.payCod === false) { S.cfg[k] = true; t.checked = true; toast('Keep at least one payment method on.'); } saveCfg(true); }
+  if (t.dataset.ecat) A.edit.cat = t.value;
+  if (t.dataset.logo) readImg(t.files[0], url => { S.cfg.logo = url; saveCfg(true); render(true); }, true);
+  if (t.dataset.eimg) readImg(t.files[0], url => { A.edit.draft.img = url; render(true); });
+  if (t.dataset.bimg) readImg(t.files[0], url => { const b = S.banners.find(x => x.id === t.dataset.bimg); if (b) { b.img = url; saveBanner(b, true); render(true); } });
+  if (t.dataset.st) { const o = S.orders.find(x => x.id === t.dataset.st); if (setStatus(o, +t.value)) toast('Status: ' + stepsNow()[o.status][0]); render(true); }
+  if (t.dataset.bn && t.tagName === 'SELECT') { const [id, k] = t.dataset.bn.split(':'), b = S.banners.find(x => x.id === id); if (b) { b[k] = t.value; saveBanner(b, true); } }
+  if (t.dataset.e && t.tagName === 'SELECT') A.edit.draft[t.dataset.e] = t.value;
+});
+
+/* ---------- start: connect to Firebase ---------- */
+let userSubs = [];
+function onUser(u) {
+  userSubs.forEach(f => { try { f(); } catch (e) { /* ignore */ } }); userSubs = [];
+  S.ready = true; S.orders = []; S.seen = null;
+  if (!u) { S.user = null; S.mode = 'customer'; S.profile = null; S.addrBook = {}; S.screen = 'main'; S.tab = 'home'; render(); return; }
+  const email = (u.email || '').toLowerCase(), isAdm = ADMINS.includes(email), errH = e => { console.error(e); };
+  if (S.ownerTry && !isAdm) { S.ownerTry = false; S.authErr = 'This account is not the shop owner.'; S.auth = 'owner'; KS().logout().catch(() => {}); return; }
+  S.ownerTry = false; S.authErr = '';
+  S.user = { id: u.uid, label: u.displayName || email || 'Customer', email };
+  userSubs.push(KS().watchDoc('cfg/notify', d => { if (tgTimer) return; S.tg = Object.assign({ tgToken: '', tgChat: '' }, d || {}); rerender(); }, errH));
+  if (isAdm) {
+    S.mode = 'admin'; S.admin = { tab: 'dash', filter: 'all', open: null, edit: null, cedit: null };
+    userSubs.push(KS().watchCol('orders', arr => {
+      arr.sort((a, b) => (b.ts || 0) - (a.ts || 0));
+      if (S.seen) arr.filter(o => !S.seen.has(o.id)).forEach(o => toast(`New order ${o.id}: ${o.name} · ${rupee(o.total)}`));
+      S.seen = new Set(arr.map(o => o.id)); S.orders = arr; rerender();
+    }, errH));
+  } else {
+    S.mode = 'customer'; S.screen = 'main'; S.tab = 'home';
+    KS().get('users/' + u.uid).then(p => { if (p) { S.profile = p; if (p.addr) S.addrBook = p.addr; if (p.name) S.user.label = p.name; rerender(); } }).catch(errH);
+    userSubs.push(KS().watchCol('orders', arr => { arr.sort((a, b) => (b.ts || 0) - (a.ts || 0)); S.orders = arr; rerender(); }, errH, ['uid', '==', u.uid]));
+  }
+  render();
+}
+function start() {
+  const errH = e => { console.error(e); S.dbErr = e && e.code === 'permission-denied' ? 'permission' : 'net'; rerender(); };
+  KS().watchDoc('cfg/main', d => { if (cfgTimer) return; S.cfgExists = !!d; S.cfg = Object.assign({}, DEFAULT_CFG, d || {}); rerender(); }, errH);
+  KS().watchCol('cats', arr => { S.catsRaw = arr; S.dataReady = true; rebuild(); rerender(); }, errH);
+  KS().watchCol('items', arr => { S.itemsRaw = arr; rebuild(); rerender(); }, errH);
+  KS().watchCol('banners', arr => { if (Object.keys(bnTimers).length) return; S.banners = arr.sort((a, b) => (a.o || 0) - (b.o || 0)); rerender(); }, errH);
+  KS().onAuth(onUser);
+}
+render();
+if (window.KSFB) start(); else window.addEventListener('ksfb', start);
+setTimeout(() => { if (!S.ready) { S.dbErr = 'net'; render(true); } }, 12000);
+})();
+</script>
+
+</body></html>
