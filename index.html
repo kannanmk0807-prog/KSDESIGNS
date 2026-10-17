@@ -700,8 +700,17 @@ const idToEmail = raw => {
   const dg = r.replace(/\D/g, '').slice(-10);
   return dg.length === 10 ? dg + '@ksdesigns.app' : '';
 };
+const TG_WORKER = 'https://ksdesigns-orders.kannanmk0807.workers.dev';
+function sendWorker(p) {
+  try { return fetch(TG_WORKER, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) }).then(r => r.ok).catch(() => false); }
+  catch (e) { return Promise.resolve(false); }
+}
 function notifyOwner(o) {
-  sendTG(waText(o).replace(/\*/g, '') + '\nOpen the app: ' + (typeof location !== 'undefined' ? location.origin : ''));
+  sendWorker({
+    name: `${o.name} (${o.id})`, phone: o.phone,
+    items: [{ name: `${o.item} · ${o.detail}${o.method === 'cod' ? ' · COD' : o.ref ? ' · UPI ' + o.ref : ''}${o.dm === 'pickup' ? ' · Pickup' : o.addr ? ' · ' + addrLine(o.addr) : ''}`, qty: o.qty || 1 }],
+    total: o.total
+  });
   const wu = waUrl(o); if (wu && typeof window.open === 'function') window.open(wu, '_blank');
 }
 function act(a, d) {
@@ -804,7 +813,7 @@ function act(a, d) {
       KS().batch(mkSeedOps()).then(() => { S.busy = false; toast('Starter catalogue loaded'); }).catch(e => { S.busy = false; fail(e); });
       break;
     }
-    case 'tgtest': toast(sendTG('Test message from your KS Designs app. New orders will arrive here.') ? 'Test sent. Check Telegram.' : 'Enter the bot token and chat id first.'); break;
+    case 'tgtest': sendWorker({ name: 'Test (app)', phone: '0000000000', items: [{ name: 'Test message from KS Designs app', qty: 1 }], total: 0 }).then(ok => toast(ok ? 'Test sent. Check Telegram.' : 'Could not reach the order alert service.')); break;
     case 'padd': A.tab = 'catalog'; A.edit = { isNew: true, cat: d.id, draft: { n: '', u: 'pc', p: 0, img: '', badge: '', opts: [] } }; render(); break;
     case 'pedit': { const c = S.cats.find(x => x.items.some(i => i.id === d.id)), it = c.items.find(i => i.id === d.id); A.edit = { isNew: false, cat: c.id, id: d.id, draft: { ...it, opts: (it.opts || []).map(o => ({ ...o })) } }; render(); break; }
     case 'pcancel': A.edit = null; render(); break;
