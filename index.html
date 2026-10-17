@@ -170,6 +170,7 @@ a.btn { display: block; text-align: center; text-decoration: none; }
 .gbtn { display: flex; align-items: center; justify-content: center; gap: 10px; }
 .gbtn b { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: #fff; color: #4285F4; font-family: Arial, sans-serif; font-size: 14px; }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
 </head><body>
 <div class="demo" id="demo"></div>
 <div class="app" id="app"></div>
@@ -291,7 +292,7 @@ const seedBanners = () => [
 /* ---------- shop state (live from Firestore) ---------- */
 /* Keep this list in sync with firestore.rules. These accounts open the admin side. */
 const ADMINS = ['kannanmk0807@gmail.com', '9994810807@ksdesigns.app'];
-const DEFAULT_CFG = { store: 'KS Designs', tag: 'Premium Creative Studio', upi: 'kannanmk0807-4@okaxis', payee: 'KS Designs', notify: '9994810807', custFee: 0, ship: 0, logo: '', gold: '#D4AF37', text: {}, stepTx: [], payUpi: true, payCod: true };
+const DEFAULT_CFG = { store: 'KS Designs', tag: 'Premium Creative Studio', upi: 'kannanmk0807-4@okaxis', payee: 'KS Designs', notify: '9994810807', custFee: 0, ship: 0, logo: '', gold: '#D4AF37', text: {}, stepTx: [], payUpi: true, payCod: true, coupons: [] };
 const S = {
   mode: 'customer', user: null, screen: 'main', tab: 'home', auth: 'login', authErr: '', busy: false, ready: false, dataReady: false, dbErr: '',
   cat: null, item: null, form: {}, payErr: '', addrErr: '', contactErr: '', addrBook: {}, last: null, draft: {}, taps: [], ownerTry: false,
@@ -322,6 +323,7 @@ function saveCfg(now) {
     d.stepTx = Array.from({ length: STEPS.length }, (_, i) => { const o = (S.cfg.stepTx || [])[i] || {}; return { n: o.n || '', d: o.d || '' }; });
     d.text = Object.assign({}, S.cfg.text || {});
     d.custFee = +d.custFee || 0; d.ship = +d.ship || 0;
+    d.coupons = (S.cfg.coupons || []).filter(c => c && String(c.code || '').trim()).map(c => ({ code: String(c.code).trim().toUpperCase(), pct: Math.min(100, Math.max(0, +c.pct || 0)) }));
     KS().set('cfg/main', d).catch(fail);
   };
   if (now) run(); else cfgTimer = setTimeout(run, 900);
@@ -369,7 +371,8 @@ const hasOpts = it => it.opts && it.opts.length;
 const sub = (it, f) => it.u === 'sqft' ? (f.w || 0) * (f.h || 0) * (f.qty || 0) * it.p : (f.qty || 0) * (hasOpts(it) ? optOf(it, f).p : it.p);
 const physical = it => ['sqft', 'pc', 'set'].includes(it.u);
 const fees = it => ({ fee: it.u === 'file' ? 0 : (+S.cfg.custFee || 0), ship: physical(it) ? (+S.cfg.ship || 0) : 0 });
-const totalOf = (it, f) => { const x = fees(it); return sub(it, f) + x.fee + x.ship; };
+const discOf = (it, f) => f.cp ? Math.round(sub(it, f) * f.cp.pct / 100) : 0;
+const totalOf = (it, f) => { const x = fees(it); return sub(it, f) + x.fee + x.ship - discOf(it, f); };
 const detailOf = (it, f) => hasOpts(it) ? `${optOf(it, f).l} × ${f.qty}` : it.u === 'sqft' ? `${f.w} × ${f.h} ft × ${f.qty}` : it.u === 'set' ? `${f.qty} × 100` : `${f.qty} ${f.qty > 1 ? 'units' : 'unit'}`;
 const priceLabel = it => hasOpts(it) ? 'from ' + rupee(Math.min(...it.opts.map(o => o.p))) : it.p === 0 ? 'Free' : rupee(it.p);
 const newCount = () => S.orders.filter(o => !o.paid).length;
@@ -384,13 +387,13 @@ const thumb = i => i.img ? `<img class="thumb" src="${i.img}" alt="">` : `<span 
 const bar = (t, back) => `<header class="bar c">${back ? `<button class="ib ink" data-act="back" aria-label="Back">${svg('back', 20)}</button>` : '<span style="width:40px"></span>'}<h1>${t}</h1><span style="width:40px"></span></header>`;
 const timeline = o => `<div class="tl">${stepsNow().map((s, i) => `<div class="tl-i ${i <= o.status ? 'on' : ''} ${i === o.status ? 'cur' : ''}"><b>${s[0]}</b><span>${s[1]}</span>${o.hist[i] ? `<em>${fmt(o.hist[i])}</em>` : ''}</div>`).join('')}</div>`;
 const starRow = (n, id, live) => `<div class="stars" ${live ? 'role="group" aria-label="Rating"' : 'style="pointer-events:none"'}>${[1, 2, 3, 4, 5].map(i => `<button class="${i <= n ? 'on' : ''}" ${live ? `data-act="rate" data-id="${id}" data-v="${i}" aria-label="${i} star"` : 'tabindex="-1"'}>★</button>`).join('')}</div>`;
-const statusPill = o => o.status === 5 ? '<span class="pill good">Delivered</span>' : !o.paid && o.method === 'cod' ? `<span class="pill gold">COD · ${stepsNow()[o.status][0]}</span>` : !o.paid ? '<span class="pill warn">Payment pending</span>' : `<span class="pill gold">${stepsNow()[o.status][0]}</span>`;
+const statusPill = o => o.cancelled ? '<span class="pill warn">Cancelled</span>' : o.status === 5 ? '<span class="pill good">Delivered</span>' : !o.paid && o.method === 'cod' ? `<span class="pill gold">COD · ${stepsNow()[o.status][0]}</span>` : !o.paid ? '<span class="pill warn">Payment pending</span>' : `<span class="pill gold">${stepsNow()[o.status][0]}</span>`;
 const demoBar = () => '';
 
 const methods = it => [S.cfg.payUpi !== false && 'upi', S.cfg.payCod !== false && it.u !== 'file' && 'cod'].filter(Boolean);
 const payOf = it => { const m = methods(it); return m.includes(S.form.pay) ? S.form.pay : (m[0] || 'upi'); };
 const addrLine = a => `${a.name}, ${a.phone}, ${a.line}, ${a.city} - ${a.pin}${a.lm ? ' (near ' + a.lm + ')' : ''}`;
-const waText = o => [`*New order ${o.id}* (${S.cfg.store})`, `Customer: ${o.name} (${o.phone})`, `Item: ${o.item}`, `Size / details: ${o.detail}`, `Quantity: ${o.qty || 1}`, ...(o.details || []).map(d => `${d.l}: ${d.v}`), o.note ? `Notes: ${o.note}` : '', o.file ? `Logo / photo: ${o.file} (customer will send it on WhatsApp)` : '', `Total: ${rupee(o.total)}`, `Payment: ${o.method === 'cod' ? 'Cash on delivery' : o.method === 'free' ? 'Free' : 'UPI ref ' + o.ref}`, o.dm === 'delivery' && o.addr ? `Deliver to: ${addrLine(o.addr)}` : o.dm === 'pickup' ? 'Pickup from the shop' : ''].filter(Boolean).join('\n');
+const waText = o => [`*New order ${o.id}* (${S.cfg.store})`, `Customer: ${o.name} (${o.phone})`, `Item: ${o.item}`, `Size / details: ${o.detail}`, `Quantity: ${o.qty || 1}`, ...(o.details || []).map(d => `${d.l}: ${d.v}`), o.note ? `Notes: ${o.note}` : '', o.file ? `Logo / photo: ${o.file}${o.photo ? ' (saved in the app)' : ' (customer will send it on WhatsApp)'}` : '', `Total: ${rupee(o.total)}`, `Payment: ${o.method === 'cod' ? 'Cash on delivery' : o.method === 'free' ? 'Free' : 'UPI ref ' + o.ref}`, o.dm === 'delivery' && o.addr ? `Deliver to: ${addrLine(o.addr)}` : o.dm === 'pickup' ? 'Pickup from the shop' : ''].filter(Boolean).join('\n');
 const waUrl = o => { const n = String(S.cfg.notify || '').replace(/\D/g, '').slice(-10); return /^\d{10}$/.test(n) ? `https://wa.me/91${n}?text=${encodeURIComponent(waText(o))}` : ''; };
 function deliveryCard(f) {
   const a = f.addr || {}, dm = f.dm || 'delivery';
@@ -426,6 +429,12 @@ const contactCard = f => { const c = f.contact || {}; return `<section class="ca
   <div class="field"><label for="ct-name">Your name</label><input class="in" id="ct-name" data-ct="name" autocomplete="name" value="${esc(c.name || '')}" placeholder="Name"></div>
   <div class="field"><label for="ct-phone">Mobile number</label><input class="in" id="ct-phone" data-ct="phone" inputmode="numeric" maxlength="10" autocomplete="tel-national" value="${esc(c.phone || '')}" placeholder="10-digit number"></div>
   <p class="note">The shop contacts you on this number about your order.</p>${S.contactErr ? `<p class="err">${esc(S.contactErr)}</p>` : ''}</section>`; };
+const couponCard = f => (S.cfg.coupons || []).length ? `<section class="card"><h2 style="font-size:15px">Coupon code</h2><div class="two"><input class="in" id="cpn" data-bind="cpIn" autocapitalize="characters" value="${esc(f.cpIn || '')}" placeholder="Enter code"><button class="btn alt" data-act="cpapply">Apply</button></div>${f.cp ? `<p class="note" style="color:var(--good)">${esc(f.cp.code)} applied: ${f.cp.pct}% off</p>` : ''}${S.cpErr ? `<p class="err">${esc(S.cpErr)}</p>` : ''}</section>` : '';
+const shopNo = () => { const n = String(S.cfg.notify || '').replace(/\D/g, '').slice(-10); return /^\d{10}$/.test(n) ? n : ''; };
+const waEnq = txt => shopNo() ? `https://wa.me/91${shopNo()}?text=${encodeURIComponent(txt)}` : '';
+const helpCard = () => { const w = waEnq(`Hi, I have an enquiry about ${S.cfg.store}.`), c = shopNo(); return `<section class="card"><h2 style="font-size:15px">Need help or a custom design?</h2><p class="note">Ask us anything before you order.</p><div class="two">${w ? `<a class="btn alt" href="${w}" target="_blank" rel="noopener">WhatsApp</a>` : ''}${c ? `<a class="btn alt" href="tel:+91${c}">Call us</a>` : ''}</div><button class="btn" data-act="enq" data-v="question">Send an enquiry</button><button class="btn alt" data-act="enq" data-v="custom">Request a custom design</button></section>`; };
+const imgBlock = (src, nm) => src ? `<img class="hero-img" style="max-height:340px;object-fit:contain" src="${src}" alt=""><a class="btn alt sm" style="align-self:flex-start" href="${src}" download="${esc(nm)}.jpg">Download image</a>` : '';
+const orderActions = o => `<div class="two"><button class="btn alt sm" data-act="bill" data-id="${o.id}">Download bill</button><button class="btn alt sm" data-act="reorder" data-id="${o.id}">Order again</button></div>${!o.cancelled && o.status < 2 ? `<button class="btn alt sm" style="align-self:flex-start" data-act="cancel" data-id="${o.id}">${S.sureCancel === o.id ? 'Tap again to cancel this order' : 'Cancel order'}</button>` : ''}`;
 const seedCard = () => (!S.cats.length && S.dataReady) ? `<section class="card how"><h2 style="font-size:15px;color:var(--gold)">Your shop is empty</h2><p class="note">Load the starter catalogue: 10 categories with sample products and prices. You can edit or delete anything afterwards in Products.</p><button class="btn" data-act="seed">Load starter catalogue</button></section>` : '';
 
 function home() {
@@ -437,7 +446,7 @@ function home() {
   <div id="hm" style="display:flex;flex-direction:column;gap:18px">
     ${S.banners.length ? `<section><div class="row-h" style="margin-bottom:10px"><h2>${esc(tx('featured'))}</h2></div><div class="car">${S.banners.map(b => `<button class="slide" data-act="banner" data-id="${b.id}">${b.img ? `<img src="${b.img}" alt="">` : ''}<span><b>${esc(b.t)}</b><small>${esc(b.s)}</small></span></button>`).join('')}</div></section>` : ''}
     <section><h2 class="sec" style="margin-bottom:12px">${esc(tx('services'))}</h2>${S.cats.length ? `<div class="svc">${S.cats.map(c => `<button data-act="cat" data-id="${c.id}"><i>${svg(c.ic, 24)}</i>${esc(c.en)}</button>`).join('')}</div>` : `<p class="note" style="text-align:center">${S.dataReady ? 'The shop is opening soon.' : 'Loading...'}</p>`}</section>
-    ${n ? `<div class="promo"><h3>${esc(tx('promoTitle'))}</h3><p>${esc(tx('promoText').replace('{n}', n.items.length))}</p><button class="btn" data-act="cat" data-id="psd">${esc(tx('promoBtn'))}</button></div>` : ''}
+    ${helpCard()}${n ? `<div class="promo"><h3>${esc(tx('promoTitle'))}</h3><p>${esc(tx('promoText').replace('{n}', n.items.length))}</p><button class="btn" data-act="cat" data-id="psd">${esc(tx('promoBtn'))}</button></div>` : ''}
   </div></main>`;
 }
 function prodCard(i) {
@@ -462,18 +471,20 @@ function itemScreen() {
     <div class="field"><label for="note">Notes</label><textarea class="in" id="note" data-bind="note" placeholder="Colours, date, anything we should know">${esc(f.note || '')}</textarea></div>`}
     <div class="sum total"><span>Total</span><span id="total">${rupee(totalOf(it, f))}</span></div>
     <button class="btn" data-act="review">Continue to checkout</button>
+    <button class="btn alt" data-act="enq" data-v="question" data-topic="${esc(it.n)}">Ask about this product</button>
   </section></main>`;
 }
 function review() {
-  const it = findItem(S.item), f = S.form, x = fees(it), s = sub(it, f), t = s + x.fee + x.ship, pay = payOf(it), ms = methods(it);
+  const it = findItem(S.item), f = S.form, x = fees(it), s = sub(it, f), dc = discOf(it, f), t = s + x.fee + x.ship - dc, pay = payOf(it), ms = methods(it);
   return `${bar('Checkout', true)}<main class="screen">
   <section class="card"><h2 style="font-size:15px">Order Summary</h2>
     <div style="display:flex;gap:12px;align-items:center">${thumb(it)}<div style="min-width:0"><b style="font-family:var(--fd)">${esc(it.n)}</b><div class="note">${esc(detailOf(it, f))}</div></div></div>
     <div class="sum"><span class="note">Subtotal</span><b>${rupee(s)}</b></div>
+    ${dc ? `<div class="sum"><span class="note">Coupon ${esc(f.cp.code)}</span><b>-${rupee(dc)}</b></div>` : ''}
     ${x.fee ? `<div class="sum"><span class="note">Customization fee</span><b>${rupee(x.fee)}</b></div>` : ''}
     ${physical(it) ? `<div class="sum"><span class="note">Shipping</span><b>${x.ship ? rupee(x.ship) : 'FREE'}</b></div>` : ''}
     <div class="sum total"><span>Total Amount</span><span>${rupee(t)}</span></div></section>
-  ${contactCard(f)}
+  ${couponCard(f)}${contactCard(f)}
   ${physical(it) ? deliveryCard(f) : ''}
   ${t > 0 && ms.length > 1 ? `<section class="card"><h2 style="font-size:15px">Payment method</h2><div class="chips">${ms.map(m => `<button class="chip" data-act="paym" data-v="${m}" aria-pressed="${pay === m}">${m === 'upi' ? 'UPI / online' : 'Cash on delivery'}</button>`).join('')}</div></section>` : ''}
   ${t > 0 && pay === 'cod' ? `<section class="card how"><h2 style="font-size:15px;color:var(--gold)">Cash on delivery</h2><p>Pay ${rupee(t)} in cash when your order is delivered. The shop starts work as soon as you place the order.</p></section>` : ''}
@@ -481,6 +492,7 @@ function review() {
     <div class="lbl">Pay ${rupee(t)} with</div>
     <div class="two">${[['Google Pay', 'com.google.android.apps.nbu.paisa.user'], ['PhonePe', 'com.phonepe.app'], ['Paytm', 'net.one97.paytm']].map(([l, p]) => `<a class="btn alt" data-act="paytap" href="intent://pay?${upiQuery(t)}#Intent;scheme=upi;package=${p};end">${l}</a>`).join('')}<a class="btn alt" data-act="paytap" href="upi://pay?${upiQuery(t)}">Other UPI apps</a></div>
     <p class="note">Tap your app, pay, then come back here. The app opens only on a phone that has it installed.</p>
+    <div class="lbl">On a computer? Scan this QR with any UPI app.</div><div id="qr" style="background:#fff;padding:10px;border-radius:12px;align-self:center;width:max-content;min-width:60px;min-height:60px"></div>
     <ol><li>Or open any UPI app and pay ${rupee(t)} to the UPI ID below</li><li>Upload the screenshot</li><li>Enter the reference number and place the order</li></ol>
     <div class="upi"><span>${esc(S.cfg.upi)}</span><button class="btn alt sm" data-act="copy">Copy</button></div>
     <div class="field"><label for="shot">Payment screenshot</label><input class="in" id="shot" type="file" accept="image/*" data-bind="shot"></div>
@@ -504,7 +516,7 @@ function ordersScreen() {
     <div class="li" style="cursor:default"><div><b>${esc(o.item)}</b><small>${esc(o.detail)} · ${fmt(o.ts)}</small></div><span class="price">${rupee(o.total)}</span></div>
     <h3 style="font-size:15px">Delivery Progress</h3>${timeline(o)}
     ${!o.paid ? `<p class="note">${o.method === 'cod' ? 'Pay cash when your order is delivered.' : 'Waiting for the shop to confirm your payment.'}</p>` : ''}
-    ${o.status === 5 ? (o.fb ? `<div><div class="lbl">Your feedback</div>${starRow(o.fb.r, '', false)}<p class="note">${esc(o.fb.t)}</p></div>` : `<div class="field"><div class="lbl">Rate this order</div>${starRow(S.draft[o.id] || 0, o.id, true)}<textarea class="in" id="fb-${o.id}" placeholder="Tell us how it was"></textarea><button class="btn sm" style="align-self:flex-start" data-act="fb" data-id="${o.id}">Send feedback</button></div>`) : ''}
+    ${orderActions(o)}${o.status === 5 ? (o.fb ? `<div><div class="lbl">Your feedback</div>${starRow(o.fb.r, '', false)}<p class="note">${esc(o.fb.t)}</p></div>` : `<div class="field"><div class="lbl">Rate this order</div>${starRow(S.draft[o.id] || 0, o.id, true)}<textarea class="in" id="fb-${o.id}" placeholder="Tell us how it was"></textarea><button class="btn sm" style="align-self:flex-start" data-act="fb" data-id="${o.id}">Send feedback</button></div>`) : ''}
   </section>`).join('') : '<p class="note">No orders yet. Pick a service on the Home tab.</p>'}</main>`;
 }
 function profile() {
@@ -519,7 +531,7 @@ function customerView() {
   if (!S.ready) return loadingView();
   if (!S.user) return login();
   const NAV = nav([['home', 'home', 'Home'], ['orders', 'list', 'My orders'], ['profile', 'user', 'Profile']]);
-  const sub2 = { cat: category, item: itemScreen, review, done };
+  const sub2 = { cat: category, item: itemScreen, review, done, enq: enquiry };
   if (S.screen !== 'main' && sub2[S.screen]) return sub2[S.screen]() + (S.screen === 'done' ? NAV : '');
   return ({ home, orders: ordersScreen, profile }[S.tab])() + NAV;
 }
@@ -546,7 +558,7 @@ function adminDash() {
   const o = S.orders, rev = o.filter(x => x.paid).reduce((a, x) => a + x.total, 0);
   const stat = (ic, v, l) => `<div class="stat">${svg(ic, 20)}<b>${v}</b><span>${l}</span></div>`;
   return `<main class="screen">${seedCard()}<div class="stats">${stat('wallet', rupee(rev), 'Revenue (payment confirmed)')}${stat('bag', o.length, 'Total orders')}${stat('users', new Set(o.map(x => x.cust || x.name)).size, 'Customers')}${stat('tag', o.filter(x => !x.paid && x.method !== 'cod').length, 'Payments to check')}</div>
-  <section><h2 class="sec" style="margin-bottom:10px">Management Tools</h2><div class="two"><button class="btn alt" data-act="padd" data-id="${S.cats[0]?.id || ''}">Add Product</button><button class="btn alt" data-act="atab" data-v="settings">Store Settings</button></div></section>
+  <section><h2 class="sec" style="margin-bottom:10px">Management Tools</h2><div class="two"><button class="btn alt" data-act="padd" data-id="${S.cats[0]?.id || ''}">Add Product</button><button class="btn alt" data-act="atab" data-v="settings">Store Settings</button></div><button class="btn alt" data-act="summary" style="margin-top:10px">Send today's summary to Telegram</button></section>
   <section class="card"><h2 style="font-size:15px">Revenue Growth</h2>${chart()}<p class="note">Confirmed payments by month.</p></section>
   <section><div class="row-h" style="margin-bottom:10px"><h2>Recent Orders</h2><button class="link" data-act="atab" data-v="orders">View All</button></div><div class="list">${o.slice(0, 4).map(orderRow).join('')}</div></section>
   <section><h2 class="sec" style="margin-bottom:10px">Live Notifications</h2><div class="list">${notesNow().map(n => `<div class="nt"><i>${svg(n.ic, 20)}</i><div><b>${esc(n.t)}</b><small>${ago(n.ts)}</small></div></div>`).join('') || '<p class="note">Nothing new.</p>'}</div></section></main>`;
@@ -565,17 +577,18 @@ function adminOrders() {
       <div class="sum"><span class="note">Size / details</span><span>${esc(x.detail)}</span></div>
       <div class="sum"><span class="note">Quantity</span><span>${esc(x.qty || 1)}</span></div>
       ${(x.details || []).map(d => `<div class="sum"><span class="note">${esc(d.l)}</span><span>${esc(d.v)}</span></div>`).join('')}
-      ${x.file ? `<div class="sum"><span class="note">Logo / photo</span><span>${esc(x.file)}</span></div>` : ''}
+      ${x.file ? `<div class="sum"><span class="note">Logo / photo</span><span>${esc(x.file)}</span></div>` : ''}${imgBlock(x.photo, x.id + '-photo')}
       ${x.note ? `<div class="sum"><span class="note">Notes</span><span>${esc(x.note)}</span></div>` : ''}
       ${x.addr ? `<div class="sum"><span class="note">Deliver to</span><span>${esc(addrLine(x.addr))}</span></div><a class="btn alt sm" style="align-self:flex-start" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([x.addr.line, x.addr.city, x.addr.pin].join(', '))}" target="_blank" rel="noopener">Open in Google Maps</a>` : x.dm === 'pickup' ? '<div class="sum"><span class="note">Delivery</span><span>Customer picks up from the shop</span></div>' : ''}
-      <div class="sum total"><span>Amount</span><span>${rupee(x.total)}</span></div></section>
+      ${x.disc ? `<div class="sum"><span class="note">Coupon ${esc(x.coupon)}</span><span>-${rupee(x.disc)}</span></div>` : ''}<div class="sum total"><span>Amount</span><span>${rupee(x.total)}</span></div><button class="btn alt" data-act="bill" data-id="${x.id}">Print bill / invoice</button></section>
     <section class="card"><h2 style="font-size:15px">Payment</h2>
       <div class="sum"><span class="note">Method</span><span>${x.method === 'cod' ? 'Cash on delivery' : x.method === 'free' ? 'Free' : 'UPI'}</span></div>
       ${x.method === 'cod' || x.method === 'free' ? '' : `<div class="sum"><span class="note">UPI reference</span><span>${esc(x.ref || 'none')}</span></div>`}
-      ${x.shot ? `<div class="sum"><span class="note">Screenshot</span><span>${esc(x.shot)}</span></div>` : ''}
+      ${x.shot ? `<div class="sum"><span class="note">Screenshot</span><span>${esc(x.shot)}</span></div>` : ''}${imgBlock(x.shotImg, x.id + '-payment')}
       ${x.paid ? '<span class="pill good" style="align-self:flex-start">Confirmed</span>' : `<button class="btn" data-act="confirm" data-id="${x.id}">${x.method === 'cod' ? 'Mark cash received' : 'Confirm payment received'}</button><p class="note">${x.method === 'cod' ? 'Press this after the customer pays cash on delivery.' : 'Check the amount and reference in your bank app first.'}</p>`}</section>
     <section class="card"><h2 style="font-size:15px">Delivery status</h2>
       <div class="field"><label for="st">Update status</label><select class="in" id="st" data-st="${x.id}">${stepsNow().map((s, i) => `<option value="${i}" ${x.status === i ? 'selected' : ''}>${s[0]}</option>`).join('')}</select></div>
+      <label style="display:flex;gap:10px;align-items:center"><input type="checkbox" data-awa="1" ${A.autoWa !== false ? 'checked' : ''}> Open WhatsApp to message the customer after each status change</label>
       ${timeline(x)}
       ${x.phone ? `<a class="btn alt" style="text-align:center;text-decoration:none;display:block" href="https://wa.me/91${x.phone}?text=${wa}" target="_blank" rel="noopener">WhatsApp customer</a>` : ''}</section>
     ${x.fb ? `<section class="card"><div class="lbl">Customer feedback</div>${starRow(x.fb.r, '', false)}<p>${esc(x.fb.t) || '<span class="note">No comment</span>'}</p></section>` : ''}</main>`;
@@ -583,7 +596,7 @@ function adminOrders() {
   const f = A.filter, shown = o.filter(x => f === 'all' || (f === 'new' && !x.paid && x.method !== 'cod') || (f === 'prog' && (x.paid || x.method === 'cod') && x.status < 5) || (f === 'done' && x.status === 5));
   const active = o.filter(x => x.status < 5).length, comp = o.filter(x => x.status === 5).length, rev = o.filter(x => x.paid).reduce((a, x) => a + x.total, 0);
   return `<main class="screen"><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">${[[active, 'Active'], [comp, 'Completed'], [rupee(rev), 'Revenue']].map(([v, l]) => `<div class="stat" style="align-items:center;text-align:center"><b style="font-size:18px;color:var(--gold)">${v}</b><span>${l}</span></div>`).join('')}</div>
-  <div class="chips" role="group" aria-label="Filter orders">${[['all', 'All'], ['new', 'Payment pending'], ['prog', 'In progress'], ['done', 'Delivered']].map(([k, l]) => `<button class="chip" data-act="filter" data-v="${k}" aria-pressed="${f === k}">${l}</button>`).join('')}</div>
+  <button class="btn alt" data-act="csv">Download all orders (Excel / CSV)</button><div class="chips" role="group" aria-label="Filter orders">${[['all', 'All'], ['new', 'Payment pending'], ['prog', 'In progress'], ['done', 'Delivered']].map(([k, l]) => `<button class="chip" data-act="filter" data-v="${k}" aria-pressed="${f === k}">${l}</button>`).join('')}</div>
   <div class="list">${shown.length ? shown.map(orderRow).join('') : '<p class="note">No orders here.</p>'}</div></main>`;
 }
 function catalog() {
@@ -641,6 +654,9 @@ function settings() {
     <label style="display:flex;gap:10px;align-items:center"><input type="checkbox" id="pm-upi" data-pm="payUpi" ${c.payUpi !== false ? 'checked' : ''}> Accept UPI payments</label>
     <label style="display:flex;gap:10px;align-items:center"><input type="checkbox" id="pm-cod" data-pm="payCod" ${c.payCod !== false ? 'checked' : ''}> Accept cash on delivery</label>
     <p class="note">Cash on delivery is not offered for downloadable files. For cash orders you press "Mark cash received" after delivery.</p></section>
+  <section class="card"><div class="row-h"><h2 style="font-size:15px">Coupon codes</h2><button class="btn sm" data-act="cpadd">+ Add</button></div>
+    ${(c.coupons || []).map((p, i) => `<div style="display:flex;gap:8px;align-items:center"><input class="in" aria-label="Coupon ${i + 1} code" data-cp="${i}:code" value="${esc(p.code)}" placeholder="DIWALI10"><input class="in" style="flex:0 0 84px" aria-label="Coupon ${i + 1} percent off" data-cp="${i}:pct" type="number" min="1" max="100" value="${p.pct}"><span class="note">% off</span><button class="ib ink" data-act="cprm" data-v="${i}" aria-label="Remove coupon">×</button></div>`).join('') || '<p class="note">No coupons yet.</p>'}
+    <p class="note">Customers type the code at checkout. The percent comes off the product price.</p></section>
   <section class="card"><h2 style="font-size:15px">Logo and colour</h2>
     ${c.logo ? `<img class="logo-img" src="${c.logo}" alt="Logo">` : '<p class="note">No logo yet. The KS box is shown on the login page.</p>'}
     <div class="field"><label for="s-logo">Upload logo (PNG with a clear background looks best)</label><input class="in" id="s-logo" type="file" accept="image/*" data-logo="1"></div>
@@ -648,10 +664,7 @@ function settings() {
     <div class="field"><label for="s-gold">Main colour</label><input class="in" style="height:44px;padding:4px" id="s-gold" type="color" data-cfg="gold" value="${esc(c.gold)}"></div></section>
   <section class="card"><h2 style="font-size:15px">App texts</h2>${Object.keys(TXT).map(k => `<div class="field"><label for="tx-${k}">${TXT[k][0]}</label><input class="in" id="tx-${k}" data-tx="${k}" value="${esc(tx(k))}"></div>`).join('')}<button class="btn alt sm" style="align-self:flex-start" data-act="resettx">Restore original texts</button></section>
   <section class="card"><h2 style="font-size:15px">Order status names</h2><p class="note">Customers see these in order tracking.</p>${stepsNow().map((s, i) => `<div class="field"><label for="sn-${i}">Step ${i + 1}</label><input class="in" id="sn-${i}" data-stx="${i}:n" value="${esc(s[0])}"><input class="in" id="sd-${i}" aria-label="Step ${i + 1} description" data-stx="${i}:d" value="${esc(s[1])}"></div>`).join('')}</section>
-  <section class="card"><h2 style="font-size:15px">Order alerts on Telegram</h2><p class="note">Every new order is sent to your Telegram, even when the app is closed. Make a bot with @BotFather, paste its token here, send the bot a message, then paste your chat id.</p>
-    <div class="field"><label for="tg-t">Bot token</label><input class="in" id="tg-t" data-nf="tgToken" autocomplete="off" value="${esc(S.tg.tgToken || '')}"></div>
-    <div class="field"><label for="tg-c">Chat id</label><input class="in" id="tg-c" data-nf="tgChat" autocomplete="off" inputmode="numeric" value="${esc(S.tg.tgChat || '')}"></div>
-    <button class="btn alt" data-act="tgtest">Send a test message</button></section>
+  <section class="card"><h2 style="font-size:15px">Order alerts on Telegram</h2><p class="note">New orders, enquiries and cancellations reach your Telegram automatically through your Cloudflare Worker. Nothing to enter here.</p><button class="btn alt" data-act="tgtest">Send a test message</button></section>
   <section class="card"><h2 style="font-size:15px">Owner login</h2><p class="note">Owner accounts: <b>${esc(ADMINS.join(', '))}</b>. Passwords are managed in Firebase: Authentication > Users. Customers never see the owner login.</p></section></main>`;
 }
 function adminView() {
@@ -665,6 +678,7 @@ function render(keep) {
   applyTheme();
   $demo.innerHTML = demoBar();
   $app.innerHTML = S.mode === 'admin' ? adminView() : customerView();
+  drawQR();
   if (!keep) window.scrollTo(0, 0);
 }
 let dirty = false;
@@ -672,13 +686,13 @@ const editing = () => { const a = document.activeElement; return !!(a && /^(INPU
 function rerender() { if (editing()) { dirty = true; return; } render(true); }
 document.addEventListener('focusout', () => { if (!dirty) return; setTimeout(() => { if (dirty && !editing()) { dirty = false; render(true); } }, 250); });
 const val = id => (document.getElementById(id)?.value || '').trim();
-function readImg(file, cb, png) {
+function readImg(file, cb, png, max) {
   if (!file) return;
   const r = new FileReader();
   r.onload = () => {
     const im = new Image();
     im.onload = () => {
-      const s = Math.min(1, (png ? 400 : 600) / Math.max(im.width, im.height)), c = document.createElement('canvas');
+      const s = Math.min(1, (png ? 400 : (max || 600)) / Math.max(im.width, im.height)), c = document.createElement('canvas');
       c.width = Math.round(im.width * s); c.height = Math.round(im.height * s);
       c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
       cb(png ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.72));
@@ -700,6 +714,58 @@ const idToEmail = raw => {
   const dg = r.replace(/\D/g, '').slice(-10);
   return dg.length === 10 ? dg + '@ksdesigns.app' : '';
 };
+function statusWa(o) {
+  const A = S.admin, ph = String(o.phone || '').replace(/\D/g, '').slice(-10);
+  if (A.autoWa === false || !/^\d{10}$/.test(ph)) return;
+  const st = stepsNow()[o.status], txt = `Hello ${o.name}, update on your ${S.cfg.store} order ${o.id} (${o.item}): ${st[0]}. ${st[1]}.${o.status === 5 ? ' Thank you!' : ''}`;
+  const w = window.open(`https://wa.me/91${ph}?text=${encodeURIComponent(txt)}`, '_blank');
+  if (!w) toast('Status saved. Tap "WhatsApp customer" below to message them.');
+}
+function placeOrder(o) {
+  return KS().set('orders/' + o.id, o).catch(e => {
+    if (e && e.code === 'permission-denied') { const lite = Object.assign({}, o); ['photo', 'shotImg', 'disc', 'coupon'].forEach(k => delete lite[k]); return KS().set('orders/' + o.id, lite); }
+    throw e;
+  });
+}
+function drawQR() {
+  const el = document.getElementById('qr'); if (!el) return;
+  el.innerHTML = '';
+  if (!window.QRCode || !S.item) { el.innerHTML = '<p class="note" style="color:#333">QR could not load. Use the UPI ID below.</p>'; return; }
+  try { const it = findItem(S.item); new window.QRCode(el, { text: 'upi://pay?' + upiQuery(totalOf(it, S.form)), width: 190, height: 190, colorDark: '#000000', colorLight: '#ffffff', correctLevel: window.QRCode.CorrectLevel.M }); } catch (e) { el.innerHTML = ''; }
+}
+function enquiry() {
+  const e = S.enq, T = { question: 'Question', custom: 'Custom design', bulk: 'Bulk order' };
+  const ph = { question: 'Type your question', custom: 'Describe the design, size, colours and date you need', bulk: 'What do you need and how many?' }[e.type];
+  const wl = waEnq(`Hi, ${e.topic ? 'I want to know about ' + e.topic : 'I have an enquiry'}.`);
+  return `${bar('Enquiry', true)}<main class="screen"><section class="card">
+  <div class="chips">${Object.entries(T).map(([k, v]) => `<button class="chip" data-act="enqtype" data-v="${k}" aria-pressed="${e.type === k}">${v}</button>`).join('')}</div>
+  ${e.topic ? `<p class="note">About: <b>${esc(e.topic)}</b></p>` : ''}
+  <div class="field"><label for="eq-n">Your name</label><input class="in" id="eq-n" data-eq="name" autocomplete="name" value="${esc(e.name)}"></div>
+  <div class="field"><label for="eq-p">Mobile number</label><input class="in" id="eq-p" data-eq="phone" inputmode="numeric" maxlength="10" value="${esc(e.phone)}" placeholder="10-digit number"></div>
+  <div class="field"><label for="eq-m">Message</label><textarea class="in" id="eq-m" data-eq="msg" placeholder="${ph}">${esc(e.msg)}</textarea></div>
+  ${e.err ? `<p class="err">${esc(e.err)}</p>` : ''}
+  <button class="btn" data-act="enqsend">Send enquiry</button>
+  ${wl ? `<div class="or">OR</div><a class="btn alt" href="${wl}" target="_blank" rel="noopener">Chat on WhatsApp</a>` : ''}
+  </section></main>`;
+}
+function printBill(o) {
+  const row = (l, v) => `<tr><td>${l}</td><td style="text-align:right">${v}</td></tr>`;
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>Bill ${esc(o.id)}</title><style>body{font-family:Arial,sans-serif;max-width:620px;margin:24px auto;padding:0 16px;color:#111}h1{margin:0;color:#8a6d00}table{width:100%;border-collapse:collapse;margin:12px 0}td,th{padding:8px;border-bottom:1px solid #ddd;text-align:left}.t td{font-weight:700;font-size:18px}small{color:#555}</style></head><body>
+  <h1>${esc(S.cfg.store)}</h1><small>${esc(S.cfg.tag)}${S.cfg.notify ? ' · ' + esc(S.cfg.notify) : ''}</small>
+  <h2>Bill / Invoice</h2><p>Order <b>#${esc(o.id)}</b><br>Date: ${new Date(o.ts).toLocaleDateString('en-IN')}<br>Customer: ${esc(o.name)} (${esc(o.phone)})${o.addr ? '<br>Address: ' + esc(addrLine(o.addr)) : ''}</p>
+  <table><tr><th>Item</th><th style="text-align:right">Amount</th></tr>${row(esc(o.item) + '<br><small>' + esc(o.detail) + '</small>', rupee(o.sub != null ? o.sub : o.total))}${o.disc ? row('Coupon ' + esc(o.coupon), '-' + rupee(o.disc)) : ''}${o.fee ? row('Customization fee', rupee(o.fee)) : ''}${o.ship ? row('Shipping', rupee(o.ship)) : ''}<tr class="t"><td>Total</td><td style="text-align:right">${rupee(o.total)}</td></tr></table>
+  <p>Payment: ${o.method === 'cod' ? 'Cash on delivery' : o.method === 'free' ? 'Free' : 'UPI'} · ${o.paid ? 'Paid' : 'Pending'}${o.cancelled ? ' · CANCELLED' : ''}</p><p><small>Thank you for your order.</small></p></body></html>`;
+  const w = window.open('', '_blank'); if (!w) { toast('Allow pop-ups to open the bill.'); return; }
+  w.document.write(html); w.document.close(); w.focus(); setTimeout(() => { try { w.print(); } catch (e) { /* ignore */ } }, 400);
+}
+function downloadCsv() {
+  const cols = ['Order ID', 'Date', 'Customer', 'Phone', 'Item', 'Details', 'Qty', 'Subtotal', 'Discount', 'Coupon', 'Fee', 'Shipping', 'Total', 'Payment', 'UPI ref', 'Paid', 'Status', 'Delivery'];
+  const q = v => { let t = String(v ?? ''); if (/^[=+\-@]/.test(t)) t = "'" + t; return '"' + t.replace(/"/g, '""') + '"'; };
+  const rows = S.orders.map(o => [o.id, new Date(o.ts).toLocaleString('en-IN'), o.name, o.phone, o.item, o.detail, o.qty || 1, o.sub ?? '', o.disc || 0, o.coupon || '', o.fee || 0, o.ship || 0, o.total, o.method, o.ref || '', o.paid ? 'Yes' : 'No', o.cancelled ? 'Cancelled' : stepsNow()[o.status][0], o.addr ? addrLine(o.addr) : (o.dm === 'pickup' ? 'Pickup' : '')]);
+  const csv = '﻿' + [cols, ...rows].map(r => r.map(q).join(',')).join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })); a.download = 'ks-orders-' + new Date().toISOString().slice(0, 10) + '.csv';
+  document.body.appendChild(a); a.click(); a.remove(); toast('Orders downloaded');
+}
 const TG_WORKER = 'https://ksdesigns-orders.kannanmk0807.workers.dev';
 function sendWorker(p) {
   try { return fetch(TG_WORKER, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p) }).then(r => r.ok).catch(() => false); }
@@ -755,7 +821,7 @@ function act(a, d) {
       break;
     }
     case 'paym': S.form.pay = d.v; S.payErr = ''; render(true); break;
-    case 'back': S.screen = S.screen === 'review' ? 'item' : S.screen === 'item' ? 'cat' : 'main'; S.payErr = ''; render(); break;
+    case 'back': if (S.screen === 'enq') { S.screen = (S.enq && S.enq.back) || 'main'; render(); break; } S.screen = S.screen === 'review' ? 'item' : S.screen === 'item' ? 'cat' : 'main'; S.payErr = ''; render(); break;
     case 'review': {
       const it = findItem(S.item); if (it.u !== 'file' && sub(it, S.form) <= 0 && it.p > 0) { toast('Enter a size and quantity first.'); break; }
       if (it.u === 'file') S.form.qty = 1;
@@ -780,9 +846,9 @@ function act(a, d) {
       S.addrErr = '';
       if (t > 0 && pay === 'upi' && !/^\d{6,}$/.test(ref)) { S.payErr = 'Enter the numeric UPI reference number from your payment app.'; render(true); break; }
       const x = fees(it), kind = it.cat.form, now = Date.now();
-      const o = { id: f.oid || newId(), uid: S.user.id, cust: S.user.id, name: ct.name.trim(), phone: ct.phone, item: it.n, detail: detailOf(it, f), qty: f.qty || 1, sub: sub(it, f), fee: x.fee, ship: x.ship, total: t, details: FIELDS[kind].filter(([k]) => f[k]).map(([k, l]) => ({ l, v: f[k] })), note: f.note || '', file: f.file || '', shot: f.shot || '', ref: pay === 'upi' ? ref : '', method: t > 0 ? pay : 'free', dm, addr: dm === 'delivery' ? { name: ad.name.trim(), phone: ad.phone, line: ad.line.trim(), city: ad.city.trim(), pin: ad.pin, lm: (ad.lm || '').trim() } : null, paid: t === 0, status: 0, ts: now, hist: [now], fb: null };
+      const o = { id: f.oid || newId(), uid: S.user.id, cust: S.user.id, name: ct.name.trim(), phone: ct.phone, item: it.n, detail: detailOf(it, f), qty: f.qty || 1, sub: sub(it, f), fee: x.fee, ship: x.ship, disc: discOf(it, f), coupon: f.cp ? f.cp.code : '', photo: f.photo || '', shotImg: f.shotImg || '', total: t, details: FIELDS[kind].filter(([k]) => f[k]).map(([k, l]) => ({ l, v: f[k] })), note: f.note || '', file: f.file || '', shot: f.shot || '', ref: pay === 'upi' ? ref : '', method: t > 0 ? pay : 'free', dm, addr: dm === 'delivery' ? { name: ad.name.trim(), phone: ad.phone, line: ad.line.trim(), city: ad.city.trim(), pin: ad.pin, lm: (ad.lm || '').trim() } : null, paid: t === 0, status: 0, ts: now, hist: [now], fb: null };
       S.busy = true;
-      KS().set('orders/' + o.id, o).then(() => {
+      placeOrder(o).then(() => {
         S.busy = false;
         const prof = { name: o.name, phone: o.phone, email: S.user.email || '' }; if (o.addr) prof.addr = o.addr;
         S.profile = Object.assign({}, S.profile || {}, prof); if (o.addr) S.addrBook = o.addr; S.user.label = o.name;
@@ -850,6 +916,41 @@ function act(a, d) {
       S.banners.filter(b => b.cat === e.id).forEach(b => ops.push(['set', 'banners/' + b.id, { t: b.t || '', s: b.s || '', img: b.img || '', cat: '', o: b.o || 0 }]));
       KS().batch(ops).then(() => { A.cedit = null; toast('Category deleted'); render(); }).catch(fail); break;
     }
+    case 'cpapply': { const code = (S.form.cpIn || val('cpn') || '').trim().toUpperCase(), c = (S.cfg.coupons || []).find(x => x.code === code); if (c && c.pct > 0) { S.form.cp = { code: c.code, pct: c.pct }; S.cpErr = ''; toast('Coupon applied'); } else { S.form.cp = null; S.cpErr = 'This coupon code is not valid.'; } render(true); break; }
+    case 'cpadd': S.cfg.coupons = (S.cfg.coupons || []).concat([{ code: '', pct: 10 }]); render(true); break;
+    case 'cprm': S.cfg.coupons.splice(+d.v, 1); saveCfg(true); render(true); break;
+    case 'enq': { const pf = S.profile || {}; S.enq = { type: d.v || 'question', topic: d.topic || '', back: S.screen, name: pf.name || S.user.label || '', phone: pf.phone || '', msg: '', err: '' }; S.screen = 'enq'; render(); break; }
+    case 'enqtype': S.enq.type = d.v; render(true); break;
+    case 'enqsend': {
+      const e = S.enq; if (S.busy) break;
+      const nm = (e.name || '').trim(), ph = (e.phone || '').trim(), ms = (e.msg || '').trim();
+      e.err = nm.length < 2 ? 'Enter your name.' : !/^[6-9]\d{9}$/.test(ph) ? 'Enter a valid 10-digit mobile number.' : ms.length < 5 ? 'Type your question or request.' : '';
+      if (e.err) { render(true); break; }
+      S.busy = true;
+      sendWorker({ type: 'enquiry', kind: e.type, topic: e.topic || '', name: nm, phone: ph, message: ms }).then(ok => {
+        S.busy = false;
+        if (ok) { toast('Enquiry sent. We will contact you soon.'); S.screen = e.back || 'main'; render(); }
+        else { e.err = 'Could not send. Try the WhatsApp button below.'; render(true); }
+      });
+      break;
+    }
+    case 'cancel': {
+      const o = S.orders.find(x => x.id === d.id); if (!o) break;
+      if (S.sureCancel !== o.id) { S.sureCancel = o.id; render(true); break; }
+      S.sureCancel = null; o.cancelled = true;
+      KS().update('orders/' + o.id, { cancelled: true }).then(() => { toast('Order cancelled'); sendWorker({ type: 'cancel', id: o.id, name: o.name, phone: o.phone, item: o.item, total: o.total, paid: !!o.paid }); }).catch(er => { o.cancelled = false; fail(er); render(true); });
+      render(true); break;
+    }
+    case 'reorder': { const o = S.orders.find(x => x.id === d.id), it = o && allItems().find(i => i.n === o.item); if (!it) { toast('This product is not available now.'); break; } act('item', { id: it.id }); break; }
+    case 'bill': { const o = S.orders.find(x => x.id === d.id); if (o) printBill(o); break; }
+    case 'csv': downloadCsv(); break;
+    case 'summary': {
+      const t0 = new Date(); t0.setHours(0, 0, 0, 0);
+      const td = S.orders.filter(o => o.ts >= t0.getTime() && !o.cancelled);
+      const txt = `Today (${t0.toLocaleDateString('en-IN')}): ${td.length} orders, ${rupee(td.reduce((a, o) => a + o.total, 0))} total, ${td.filter(o => o.paid).length} paid. In progress: ${S.orders.filter(o => !o.cancelled && o.status < 5).length}. UPI payments to check: ${S.orders.filter(o => !o.paid && o.method === 'upi' && !o.cancelled).length}.`;
+      sendWorker({ type: 'summary', text: txt }).then(ok => toast(ok ? 'Summary sent to Telegram' : 'Could not send. Update the Worker first.'));
+      break;
+    }
     case 'paytap': toast('Pay in your UPI app, then come back and enter the reference number.'); break;
     case 'logorm': S.cfg.logo = ''; saveCfg(true); render(true); break;
     case 'resettx': S.cfg.text = {}; S.cfg.stepTx = []; saveCfg(true); toast('Original texts restored'); render(true); break;
@@ -877,6 +978,8 @@ document.addEventListener('input', e => {
   if (t.dataset.e) { const k = t.dataset.e; A.edit.draft[k] = k === 'p' ? (parseFloat(t.value) || 0) : t.value; }
   if (t.dataset.eo) { const [i, k] = t.dataset.eo.split(':'); A.edit.draft.opts[+i][k] = k === 'p' ? (parseFloat(t.value) || 0) : t.value; }
   if (t.dataset.ce) A.cedit.draft[t.dataset.ce] = t.value;
+  if (t.dataset.eq && S.enq) S.enq[t.dataset.eq] = t.value;
+  if (t.dataset.cp) { const [i, k] = t.dataset.cp.split(':'); if (S.cfg.coupons && S.cfg.coupons[+i]) { S.cfg.coupons[+i][k] = k === 'pct' ? (parseFloat(t.value) || 0) : t.value.toUpperCase(); saveCfg(); } }
   if (t.dataset.cfg) { const k = t.dataset.cfg; S.cfg[k] = ['custFee', 'ship'].includes(k) ? (parseFloat(t.value) || 0) : t.value; if (k === 'gold') applyTheme(); saveCfg(); }
   if (t.dataset.ad) { S.form.addr = S.form.addr || {}; S.form.addr[t.dataset.ad] = t.value; }
   if (t.dataset.nf) { S.tg[t.dataset.nf] = t.value; saveTg(); }
@@ -886,13 +989,14 @@ document.addEventListener('input', e => {
 });
 document.addEventListener('change', e => {
   const t = e.target, A = S.admin;
-  if (t.dataset.bind === 'file' || t.dataset.bind === 'shot') S.form[t.dataset.bind] = t.files[0]?.name || '';
+  if (t.dataset.bind === 'file' || t.dataset.bind === 'shot') { const isF = t.dataset.bind === 'file', k = isF ? 'photo' : 'shotImg'; S.form[t.dataset.bind] = t.files[0]?.name || ''; S.form[k] = ''; if (t.files[0]) readImg(t.files[0], url => { S.form[k] = url; }, false, isF ? 900 : 1200); }
   if (t.dataset.pm) { const k = t.dataset.pm; S.cfg[k] = t.checked; if (S.cfg.payUpi === false && S.cfg.payCod === false) { S.cfg[k] = true; t.checked = true; toast('Keep at least one payment method on.'); } saveCfg(true); }
   if (t.dataset.ecat) A.edit.cat = t.value;
   if (t.dataset.logo) readImg(t.files[0], url => { S.cfg.logo = url; saveCfg(true); render(true); }, true);
   if (t.dataset.eimg) readImg(t.files[0], url => { A.edit.draft.img = url; render(true); });
   if (t.dataset.bimg) readImg(t.files[0], url => { const b = S.banners.find(x => x.id === t.dataset.bimg); if (b) { b.img = url; saveBanner(b, true); render(true); } });
-  if (t.dataset.st) { const o = S.orders.find(x => x.id === t.dataset.st); if (setStatus(o, +t.value)) toast('Status: ' + stepsNow()[o.status][0]); render(true); }
+  if (t.dataset.awa) A.autoWa = t.checked;
+  if (t.dataset.st) { const o = S.orders.find(x => x.id === t.dataset.st); if (setStatus(o, +t.value)) { toast('Status: ' + stepsNow()[o.status][0]); statusWa(o); } render(true); }
   if (t.dataset.bn && t.tagName === 'SELECT') { const [id, k] = t.dataset.bn.split(':'), b = S.banners.find(x => x.id === id); if (b) { b[k] = t.value; saveBanner(b, true); } }
   if (t.dataset.e && t.tagName === 'SELECT') A.edit.draft[t.dataset.e] = t.value;
 });
