@@ -494,10 +494,10 @@ function review() {
     <div class="two">${[['Google Pay', 'com.google.android.apps.nbu.paisa.user'], ['PhonePe', 'com.phonepe.app'], ['Paytm', 'net.one97.paytm']].map(([l, p]) => `<a class="btn alt" data-act="paytap" href="intent://pay?${upiQuery(t)}#Intent;scheme=upi;package=${p};end">${l}</a>`).join('')}<a class="btn alt" data-act="paytap" href="upi://pay?${upiQuery(t)}">Other UPI apps</a></div>
     <p class="note">Tap your app, pay, then come back here. The app opens only on a phone that has it installed.</p>
     <div class="lbl">On a computer? Scan this QR with any UPI app.</div><div id="qr" style="background:#fff;padding:10px;border-radius:12px;align-self:center;width:max-content;min-width:60px;min-height:60px"></div>
-    <ol><li>Or open any UPI app and pay ${rupee(t)} to the UPI ID below</li><li>Upload the screenshot</li><li>Enter the reference number and place the order</li></ol>
+    <ol><li>Or open any UPI app and pay ${rupee(t)} to the UPI ID below</li><li>Upload the screenshot</li><li>Place the order (the reference number is optional when you upload the screenshot)</li></ol>
     <div class="upi"><span>${esc(S.cfg.upi)}</span><button class="btn alt sm" data-act="copy">Copy</button></div>
     <div class="field"><label for="shot">Payment screenshot</label><input class="in" id="shot" type="file" accept="image/*" data-bind="shot"></div>
-    <div class="field"><label for="ref">UPI reference number</label><input class="in" id="ref" data-bind="ref" inputmode="numeric" value="${esc(f.ref || '')}" placeholder="12-digit UTR / Txn ID"></div>
+    <div class="field"><label for="ref">UPI reference number (optional if you upload the screenshot)</label><input class="in" id="ref" data-bind="ref" inputmode="numeric" value="${esc(f.ref || '')}" placeholder="12-digit UTR / Txn ID"></div>
     ${S.payErr ? `<p class="err">${esc(S.payErr)}</p>` : ''}
     <p class="note">The shop owner checks your payment before work starts. A QR code can be added in the real app.</p></section>` : ''}
   <button class="btn" data-act="place">${t > 0 && pay === 'upi' ? 'I have paid, place order' : 'Place order'}</button></main>`;
@@ -851,7 +851,7 @@ function act(a, d) {
         if (miss) { S.addrErr = miss; toast(miss); render(true); break; }
       }
       S.addrErr = '';
-      if (t > 0 && pay === 'upi' && !/^\d{6,}$/.test(ref)) { S.payErr = 'Enter the numeric UPI reference number from your payment app.'; render(true); break; }
+      if (t > 0 && pay === 'upi' && !/^\d{6,}$/.test(ref) && !f.shotImg) { S.payErr = f.shot ? 'Your screenshot is still loading. Wait a second and tap again, or enter the UPI reference number.' : 'Upload your payment screenshot, or enter the UPI reference number from your payment app.'; render(true); break; }
       const x = fees(it), kind = it.cat.form, now = Date.now();
       const o = { id: f.oid || newId(), uid: S.user.id, cust: S.user.id, name: ct.name.trim(), phone: ct.phone, item: it.n, detail: detailOf(it, f), qty: f.qty || 1, sub: sub(it, f), fee: x.fee, ship: x.ship, disc: discOf(it, f), coupon: f.cp ? f.cp.code : '', photo: f.photo || '', shotImg: f.shotImg || '', total: t, details: FIELDS[kind].filter(([k]) => f[k]).map(([k, l]) => ({ l, v: f[k] })), note: f.note || '', file: f.file || '', shot: f.shot || '', ref: pay === 'upi' ? ref : '', method: t > 0 ? pay : 'free', dm, addr: dm === 'delivery' ? { name: ad.name.trim(), phone: ad.phone, line: ad.line.trim(), city: ad.city.trim(), pin: ad.pin, lm: (ad.lm || '').trim() } : null, paid: t === 0, status: 0, ts: now, hist: [now], fb: null };
       S.busy = true;
