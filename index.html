@@ -792,7 +792,7 @@ function act(a, d) {
     case 'auth': S.auth = d.v; S.authErr = ''; render(); break;
     case 'logotap': {
       const now = Date.now(); S.taps = (S.taps || []).filter(t => now - t < 4000); S.taps.push(now);
-      if (S.taps.length >= 5) { S.taps = []; S.auth = 'owner'; S.authErr = ''; render(); }
+      if (S.taps.length >= 3) { S.taps = []; S.auth = 'owner'; S.authErr = ''; render(); }
       break;
     }
     case 'google': {
