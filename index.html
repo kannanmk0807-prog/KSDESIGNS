@@ -432,9 +432,10 @@ const contactCard = f => { const c = f.contact || {}; return `<section class="ca
 const couponCard = f => (S.cfg.coupons || []).length ? `<section class="card"><h2 style="font-size:15px">Coupon code</h2><div class="two"><input class="in" id="cpn" data-bind="cpIn" autocapitalize="characters" value="${esc(f.cpIn || '')}" placeholder="Enter code"><button class="btn alt" data-act="cpapply">Apply</button></div>${f.cp ? `<p class="note" style="color:var(--good)">${esc(f.cp.code)} applied: ${f.cp.pct}% off</p>` : ''}${S.cpErr ? `<p class="err">${esc(S.cpErr)}</p>` : ''}</section>` : '';
 const shopNo = () => { const n = String(S.cfg.notify || '').replace(/\D/g, '').slice(-10); return /^\d{10}$/.test(n) ? n : ''; };
 const waEnq = txt => shopNo() ? `https://wa.me/91${shopNo()}?text=${encodeURIComponent(txt)}` : '';
+const cancelWaUrl = o => waEnq([`*Order ${o.id} cancelled* (${S.cfg.store})`, `Customer: ${o.name} (${o.phone})`, `Item: ${o.item}`, `Total: ${rupee(o.total)}`, 'I have cancelled this order.'].join('\n'));
 const helpCard = () => { const w = waEnq(`Hi, I have an enquiry about ${S.cfg.store}.`), c = shopNo(); return `<section class="card"><h2 style="font-size:15px">Need help or a custom design?</h2><p class="note">Ask us anything before you order.</p><div class="two">${w ? `<a class="btn alt" href="${w}" target="_blank" rel="noopener">WhatsApp</a>` : ''}${c ? `<a class="btn alt" href="tel:+91${c}">Call us</a>` : ''}</div><button class="btn" data-act="enq" data-v="question">Send an enquiry</button><button class="btn alt" data-act="enq" data-v="custom">Request a custom design</button></section>`; };
 const imgBlock = (src, nm) => src ? `<img class="hero-img" style="max-height:340px;object-fit:contain" src="${src}" alt=""><a class="btn alt sm" style="align-self:flex-start" href="${src}" download="${esc(nm)}.jpg">Download image</a>` : '';
-const orderActions = o => `<div class="two"><button class="btn alt sm" data-act="bill" data-id="${o.id}">Download bill</button><button class="btn alt sm" data-act="reorder" data-id="${o.id}">Order again</button></div>${!o.cancelled && o.status < 2 ? `<button class="btn alt sm" style="align-self:flex-start" data-act="cancel" data-id="${o.id}">${S.sureCancel === o.id ? 'Tap again to cancel this order' : 'Cancel order'}</button>` : ''}`;
+const orderActions = o => `<div class="two"><button class="btn alt sm" data-act="bill" data-id="${o.id}">Download bill</button><button class="btn alt sm" data-act="reorder" data-id="${o.id}">Order again</button></div>${!o.cancelled && o.status < 2 ? `<button class="btn alt sm" style="align-self:flex-start" data-act="cancel" data-id="${o.id}">${S.sureCancel === o.id ? 'Tap again to cancel this order' : 'Cancel order'}</button>` : ''}${o.cancelled && cancelWaUrl(o) ? `<a class="btn sm" href="${cancelWaUrl(o)}" target="_blank" rel="noopener">Tell the shop on WhatsApp</a>` : ''}`;
 const seedCard = () => (!S.cats.length && S.dataReady) ? `<section class="card how"><h2 style="font-size:15px;color:var(--gold)">Your shop is empty</h2><p class="note">Load the starter catalogue: 10 categories with sample products and prices. You can edit or delete anything afterwards in Products.</p><button class="btn" data-act="seed">Load starter catalogue</button></section>` : '';
 
 function home() {
@@ -580,7 +581,7 @@ function adminOrders() {
       ${x.file ? `<div class="sum"><span class="note">Logo / photo</span><span>${esc(x.file)}</span></div>` : ''}${imgBlock(x.photo, x.id + '-photo')}
       ${x.note ? `<div class="sum"><span class="note">Notes</span><span>${esc(x.note)}</span></div>` : ''}
       ${x.addr ? `<div class="sum"><span class="note">Deliver to</span><span>${esc(addrLine(x.addr))}</span></div><a class="btn alt sm" style="align-self:flex-start" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([x.addr.line, x.addr.city, x.addr.pin].join(', '))}" target="_blank" rel="noopener">Open in Google Maps</a>` : x.dm === 'pickup' ? '<div class="sum"><span class="note">Delivery</span><span>Customer picks up from the shop</span></div>' : ''}
-      ${x.disc ? `<div class="sum"><span class="note">Coupon ${esc(x.coupon)}</span><span>-${rupee(x.disc)}</span></div>` : ''}<div class="sum total"><span>Amount</span><span>${rupee(x.total)}</span></div><button class="btn alt" data-act="bill" data-id="${x.id}">Print bill / invoice</button></section>
+      ${x.disc ? `<div class="sum"><span class="note">Coupon ${esc(x.coupon)}</span><span>-${rupee(x.disc)}</span></div>` : ''}<div class="sum total"><span>Amount</span><span>${rupee(x.total)}</span></div><button class="btn alt" data-act="bill" data-id="${x.id}">Print bill / invoice</button><button class="btn alt" style="color:var(--bad)" data-act="odel" data-id="${x.id}">${A.sureDel === x.id ? 'Tap again to delete for good' : 'Delete order'}</button></section>
     <section class="card"><h2 style="font-size:15px">Payment</h2>
       <div class="sum"><span class="note">Method</span><span>${x.method === 'cod' ? 'Cash on delivery' : x.method === 'free' ? 'Free' : 'UPI'}</span></div>
       ${x.method === 'cod' || x.method === 'free' ? '' : `<div class="sum"><span class="note">UPI reference</span><span>${esc(x.ref || 'none')}</span></div>`}
@@ -759,12 +760,18 @@ function printBill(o) {
   w.document.write(html); w.document.close(); w.focus(); setTimeout(() => { try { w.print(); } catch (e) { /* ignore */ } }, 400);
 }
 function downloadCsv() {
-  const cols = ['Order ID', 'Date', 'Customer', 'Phone', 'Item', 'Details', 'Qty', 'Subtotal', 'Discount', 'Coupon', 'Fee', 'Shipping', 'Total', 'Payment', 'UPI ref', 'Paid', 'Status', 'Delivery'];
-  const q = v => { let t = String(v ?? ''); if (/^[=+\-@]/.test(t)) t = "'" + t; return '"' + t.replace(/"/g, '""') + '"'; };
-  const rows = S.orders.map(o => [o.id, new Date(o.ts).toLocaleString('en-IN'), o.name, o.phone, o.item, o.detail, o.qty || 1, o.sub ?? '', o.disc || 0, o.coupon || '', o.fee || 0, o.ship || 0, o.total, o.method, o.ref || '', o.paid ? 'Yes' : 'No', o.cancelled ? 'Cancelled' : stepsNow()[o.status][0], o.addr ? addrLine(o.addr) : (o.dm === 'pickup' ? 'Pickup' : '')]);
-  const csv = '﻿' + [cols, ...rows].map(r => r.map(q).join(',')).join('\r\n');
-  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })); a.download = 'ks-orders-' + new Date().toISOString().slice(0, 10) + '.csv';
-  document.body.appendChild(a); a.click(); a.remove(); toast('Orders downloaded');
+  try {
+    if (!S.orders.length) { toast('No orders to download yet.'); return; }
+    const cols = ['Order ID', 'Date', 'Customer', 'Phone', 'Item', 'Details', 'Qty', 'Subtotal', 'Discount', 'Coupon', 'Fee', 'Shipping', 'Total', 'Payment', 'UPI ref', 'Paid', 'Status', 'Delivery'];
+    const q = v => { let t = String(v == null ? '' : v); if (/^[=+\-@]/.test(t)) t = "'" + t; return '"' + t.replace(/"/g, '""') + '"'; };
+    const stName = o => o.cancelled ? 'Cancelled' : ((stepsNow()[o.status] || [String(o.status == null ? '' : o.status)])[0]);
+    const rows = S.orders.map(o => [o.id, o.ts ? new Date(o.ts).toLocaleString('en-IN') : '', o.name, o.phone, o.item, o.detail, o.qty || 1, o.sub == null ? '' : o.sub, o.disc || 0, o.coupon || '', o.fee || 0, o.ship || 0, o.total, o.method, o.ref || '', o.paid ? 'Yes' : 'No', stName(o), o.addr ? addrLine(o.addr) : (o.dm === 'pickup' ? 'Pickup' : '')]);
+    const csv = '﻿' + [cols].concat(rows).map(r => r.map(q).join(',')).join('\r\n');
+    const name = 'ks-orders-' + new Date().toISOString().slice(0, 10) + '.csv', url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' })), a = document.createElement('a');
+    a.href = url; a.download = name; a.style.display = 'none'; document.body.appendChild(a); a.click();
+    setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 4000);
+    toast(S.orders.length + ' orders saved as ' + name + ' (check Downloads)');
+  } catch (e) { console.error(e); toast('Could not make the file: ' + (e && e.message ? e.message : 'unknown error')); }
 }
 const TG_WORKER = 'https://ksdesigns-orders.kannanmk0807.workers.dev';
 function sendWorker(p) {
@@ -938,7 +945,14 @@ function act(a, d) {
       const o = S.orders.find(x => x.id === d.id); if (!o) break;
       if (S.sureCancel !== o.id) { S.sureCancel = o.id; render(true); break; }
       S.sureCancel = null; o.cancelled = true;
-      KS().update('orders/' + o.id, { cancelled: true }).then(() => { toast('Order cancelled'); sendWorker({ type: 'cancel', id: o.id, name: o.name, phone: o.phone, item: o.item, total: o.total, paid: !!o.paid }); }).catch(er => { o.cancelled = false; fail(er); render(true); });
+      KS().update('orders/' + o.id, { cancelled: true }).then(() => { toast('Order cancelled'); sendWorker({ type: 'cancel', id: o.id, name: o.name, phone: o.phone, item: o.item, total: o.total, paid: !!o.paid }); const u = cancelWaUrl(o); if (u) window.open(u, '_blank'); }).catch(er => {
+        o.cancelled = false;
+        if (er && er.code === 'permission-denied') {
+          sendWorker({ type: 'enquiry', kind: 'question', topic: 'CANCEL REQUEST ' + o.id, name: o.name, phone: o.phone, message: `Customer wants to cancel order ${o.id} (${o.item}, ${rupee(o.total)}). Please call the customer to confirm.` })
+            .then(ok => toast(ok ? 'Cancel request sent to the shop. They will confirm it.' : 'Could not send the request. Please call the shop.'));
+        } else fail(er);
+        render(true);
+      });
       render(true); break;
     }
     case 'reorder': { const o = S.orders.find(x => x.id === d.id), it = o && allItems().find(i => i.n === o.item); if (!it) { toast('This product is not available now.'); break; } act('item', { id: it.id }); break; }
@@ -951,6 +965,7 @@ function act(a, d) {
       sendWorker({ type: 'summary', text: txt }).then(ok => toast(ok ? 'Summary sent to Telegram' : 'Could not send. Update the Worker first.'));
       break;
     }
+    case 'odel': { if (A.sureDel !== d.id) { A.sureDel = d.id; render(true); break; } A.sureDel = null; KS().del('orders/' + d.id).then(() => { A.open = null; toast('Order deleted'); render(); }).catch(fail); break; }
     case 'paytap': toast('Pay in your UPI app, then come back and enter the reference number.'); break;
     case 'logorm': S.cfg.logo = ''; saveCfg(true); render(true); break;
     case 'resettx': S.cfg.text = {}; S.cfg.stepTx = []; saveCfg(true); toast('Original texts restored'); render(true); break;
